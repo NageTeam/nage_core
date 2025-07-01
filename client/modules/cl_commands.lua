@@ -176,7 +176,7 @@ end)
 
 RegisterNetEvent('nage:revivePlayer')
 AddEventHandler('nage:revivePlayer', function()
-    local ped = NAGE.PlayerPedID())
+    local ped = NAGE.PlayerPedID()
 
     if IsEntityDead(ped) then
         local coords = GetEntityCoords(ped)
