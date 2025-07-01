@@ -71,7 +71,7 @@ if IsDuplicityVersion() then
     end
 else
     NAGE.PlayerID = function()
-        return PlayerId()
+        return GetPlayerServerId(PlayerId())
     end
 
     NAGE.PlayerPedID = function()
