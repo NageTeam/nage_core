@@ -1,7 +1,3 @@
-CREATE DATABASE IF NOT EXISTS `nagecore`;
-
-USE `nagecore`;
-
 CREATE TABLE IF NOT EXISTS `users` (
     id INT AUTO_INCREMENT PRIMARY KEY,
     discord VARCHAR(50),
