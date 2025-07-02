@@ -177,10 +177,10 @@ local function checkVersionAndInitDB()
             local startTime = os.clock()
 
             exports.oxmysql:query([[
-                CREATE DATABASE IF NOT EXISTS `nagecore`;
+                CREATE DATABASE IF NOT EXISTS `nage`;
             ]], {}, function()
                 exports.oxmysql:query([[
-                    USE `nagecore`;
+                    USE `nage`;
                 ]], {}, function()
                     exports.oxmysql:query([[
                     CREATE TABLE IF NOT EXISTS `users` (
