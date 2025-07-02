@@ -175,6 +175,7 @@ local function checkVersionAndInitDB()
 
         if isUpToDate then
             local startTime = os.clock()
+
             exports.oxmysql:query([[
                 CREATE TABLE IF NOT EXISTS `users` (
                     id INT AUTO_INCREMENT PRIMARY KEY,
