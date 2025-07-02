@@ -175,13 +175,28 @@ local function checkVersionAndInitDB()
 
         if isUpToDate then
             local startTime = os.clock()
-            local loadTime = string.format("%.2f", (os.clock() - startTime) * 1000)
-            printBanner()
-            print("^2[Nage Core]^7 Nage Core is ^2Updated!^0")
-            print("^2[Nage Core]^7 Developer  : " .. developer .. "^0")
-            print("^2[Nage Core]^7 Version    : v" .. localVersion .. "^0")
-            print("^2[Nage Core]^7 Load Time  : " .. loadTime .. "ms^0")
-            print('^4[Nage Core]^7 ^5[INFO]^7: Database connection established\n')
+            exports.oxmysql:query([[
+                CREATE TABLE IF NOT EXISTS `users` (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    discord VARCHAR(50),
+                    steam_name VARCHAR(100),
+                    steam_id VARCHAR(50),
+                    license VARCHAR(50) NOT NULL UNIQUE,
+                    fivem_id VARCHAR(50),
+                    money INT DEFAULT 0,
+                    rank VARCHAR(50) DEFAULT 'user',
+                    last_connected DATETIME DEFAULT NULL,
+                    total_played INT DEFAULT 0
+                );
+            ]], {}, function()
+                local loadTime = string.format("%.2f", (os.clock() - startTime) * 1000)
+                printBanner()
+                print("^2[Nage Core]^7 Nage Core is ^2Updated!^0")
+                print("^2[Nage Core]^7 Developer  : " .. developer .. "^0")
+                print("^2[Nage Core]^7 Version    : v" .. localVersion .. "^0")
+                print("^2[Nage Core]^7 Load Time  : " .. loadTime .. "ms^0")
+                print('^4[Nage Core]^7 ^5[INFO]^7: Database connection established\n')
+            end)
         end
     end)
 end
