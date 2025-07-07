@@ -209,23 +209,6 @@ AddEventHandler("nage:killPlayer", function()
     SetEntityHealth(ped, 0)
 end)
 
-RegisterCommand("kill2", function(source, args)
-    NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
-        if #args < 1 then
-            nage.notify({ title = "Nage Core", description = locale["must_provide_id"], type = "error" })
-            return
-        end
-
-        local targetId = tonumber(args[1])
-        if not targetId or not GetPlayerName(targetId) then
-            nage.notify({ title = locale["invalid_player_id"], type = "error" })
-            return
-        end
-
-        TriggerServerEvent("nage:killPlayer", targetId)
-    end)
-end, false)
-
 Citizen.CreateThread(function()
     TriggerEvent('chat:addSuggestion', '/clear', 'Clear the current chat',{})
     TriggerEvent('chat:addSuggestion', '/tpm', 'Teleport to waypoint',{})
