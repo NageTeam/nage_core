@@ -10,7 +10,7 @@ local locales = load(localeLoader)()
 local locale = locales.new(Config.Locale or "en")
 
 local requiredResourceName = "nage"
-local localVersion = "1.0.0"
+local localVersion = "1.0.1"
 local developer = "Nage Team"
 local githubVersionUrl = "https://raw.githubusercontent.com/LueFlue/versioner/main/nagecore"
 
