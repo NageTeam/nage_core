@@ -32,9 +32,8 @@ end
 if Config.Disable.AmmoDisplay then
     CreateThread(function()
         while true do
-            Wait(50)
+            Wait(5)
             DisplayAmmoThisFrame(false)
-            HideHudComponentThisFrame(19)
         end
     end)
 end
@@ -44,71 +43,86 @@ if Config.Disable.AimAssist then
 end
 
 if Config.Disable.GhostPeak then
-    local DEG_TO_RAD = math.pi / 180
-
-    local function RotationToDirection(rotation)
-        local xRad = rotation.x * DEG_TO_RAD
-        local yRad = rotation.y * DEG_TO_RAD
-        local zRad = rotation.z * DEG_TO_RAD
-        return {
-            x = -math.sin(zRad) * math.abs(math.cos(xRad)),
-            y = math.cos(zRad) * math.abs(math.cos(xRad)),
-            z = math.sin(xRad)
-        }
+    function RotationToDirection(rotation)
+    	local adjustedRotation = 
+    	{ 
+    		x = (math.pi / 180) * rotation.x, 
+    		y = (math.pi / 180) * rotation.y, 
+    		z = (math.pi / 180) * rotation.z 
+    	}
+    	local direction = 
+    	{
+    		x = -math.sin(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
+    		y = math.cos(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
+    		z = math.sin(adjustedRotation.x)
+    	}
+    	return direction
     end
-
-    local function RayCastGamePlayWeapon(weapon, distance, flag)
+    
+    function RayCastGamePlayWeapon(weapon,distance,flag)
         local cameraRotation = GetGameplayCamRot()
+        
         local weapCoord = GetEntityCoords(weapon)
+    
         local cameraCoord = GetGameplayCamCoord()
-        local direction = RotationToDirection(cameraRotation)
-        local destination = vector3(cameraCoord.x + direction.x * distance, cameraCoord.y + direction.y * distance,
-            cameraCoord.z + direction.z * distance)
-        if not flag then flag = 1 end
-        local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(weapCoord.x, weapCoord.y, weapCoord.z, destination.x,
-            destination.y, destination.z, flag, -1, 1))
-        return b, c, e, destination
+    	local direction = RotationToDirection(cameraRotation)
+    	local destination =  vector3(cameraCoord.x + direction.x * distance, 
+    		cameraCoord.y + direction.y * distance, 
+    		cameraCoord.z + direction.z * distance 
+        )
+        if not flag then
+            flag = 1
+        end
+       
+    	local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(weapCoord.x, weapCoord.y, weapCoord.z, destination.x, destination.y, destination.z, flag, -1, 1))
+    	return b, c, e, destination
     end
-
-    local function RayCastGamePlayCamera(weapon, distance, flag)
+    
+    function RayCastGamePlayCamera(weapon,distance,flag)
         local cameraRotation = GetGameplayCamRot()
+        
         local weapCoord = GetEntityCoords(weapon)
+    
         local cameraCoord = GetGameplayCamCoord()
-        local direction = RotationToDirection(cameraRotation)
-        local destination = vector3(cameraCoord.x + direction.x * distance, cameraCoord.y + direction.y * distance,
-            cameraCoord.z + direction.z * distance)
-        if not flag then flag = 1 end
-        local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(cameraCoord.x, cameraCoord.y, cameraCoord.z,
-            destination.x, destination.y, destination.z, flag, -1, 1))
-        return b, c, e, destination
+    	local direction = RotationToDirection(cameraRotation)
+    	local destination =  vector3(cameraCoord.x + direction.x * distance, 
+    		cameraCoord.y + direction.y * distance, 
+    		cameraCoord.z + direction.z * distance 
+        )
+        if not flag then
+            flag = 1
+        end
+    
+    	local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(cameraCoord.x, cameraCoord.y, cameraCoord.z, destination.x, destination.y, destination.z, flag, -1, 1))
+    	return b, c, e, destination
     end
-
+    
     Citizen.CreateThread(function()
-        local ped, weapon, nPlayer, sleep
+        local ped, weapon, pedid, sleep, shoot
         while true do
-            sleep = 500
-            nPlayer = NAGE.PlayerID()
-            ped = NAGE.PlayerPedID()
-            weapon = GetWeaponObjectFromPed(ped, false)
-
-            if weapon > 0 and IsPlayerFreeAiming(nPlayer) then
-                local hitW, coordsW, entityW = RayCastGamePlayWeapon(weapon, 15.0, 1)
-                local hitC, coordsC, entityC = RayCastGamePlayCamera(weapon, 1000.0, 1)
-                if hitW > 0 and entityW > 0 and math.abs(#coordsW - #coordsC) > 1 then
+             sleep = 500 
+             pedid = NAGE.PlayerID()
+             ped = NAGE.PlayerPedID()
+             weapon = GetCurrentPedWeaponEntityIndex(ped)
+            
+            if weapon > 0 and IsPlayerFreeAiming(pedid) then
+                local hitW, coordsW, entityW = RayCastGamePlayWeapon(weapon, 15.0,1)
+                local hitC, coordsC, entityC = RayCastGamePlayCamera(weapon, 1000.0,1)
+                if hitW > 0 and entityW > 0 and math.abs(#coordsW-#coordsC) > 1 then
                     sleep = 0
                     Draw3DText(coordsW.x, coordsW.y, coordsW.z, '❌')
-                    DisablePlayerFiring(ped, true)
-                    DisableControlAction(0, 106, true)
+                    DisablePlayerFiring(ped,true) 
+                    DisableControlAction(0, 106, true) 
                 end
             else
-                Citizen.Wait(500)
-            end
+                Citizen.Wait(1000)
+            end    
             Citizen.Wait(sleep)
         end
     end)
-
+    
     function Draw3DText(x, y, z, text)
-        local onScreen, _x, _y = World3dToScreen2d(x, y, z)
+        local onScreen,_x,_y=World3dToScreen2d(x,y,z)
         if onScreen then
             SetTextScale(0.3, 0.3)
             SetTextFont(0)
@@ -119,7 +133,7 @@ if Config.Disable.GhostPeak then
             SetTextEntry("STRING")
             SetTextCentre(1)
             AddTextComponentString(text)
-            DrawText(_x, _y)
+            DrawText(_x,_y)
         end
     end
 end
