@@ -3,7 +3,7 @@ game 'gta5'
 lua54 'yes'
 license 'Nage License'
 author 'Nage Team - https://discord.gg/ddMtV2CwJj'
-version '1.0.1'
+version '1.0.2'
 description 'A perfect PVP framework for FiveM'
 
 server_scripts {
