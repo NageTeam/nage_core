@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS `users` (
     license VARCHAR(50) NOT NULL UNIQUE,
     fivem_id VARCHAR(50),
     money INT DEFAULT 0,
-    rank VARCHAR(50) DEFAULT 'user',
+    `rank` VARCHAR(50) DEFAULT 'user',
     last_connected VARCHAR(50) DEFAULT 'Never'
 );
