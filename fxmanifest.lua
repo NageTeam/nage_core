@@ -3,8 +3,10 @@ game 'gta5'
 lua54 'yes'
 license 'Nage License'
 author 'Nage Team - https://discord.gg/ddMtV2CwJj'
-version '1.0.2'
+version '1.0.3'
 description 'A perfect PVP framework for FiveM'
+
+shared_script 'utils/nageprint.lua'
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
@@ -12,8 +14,8 @@ server_scripts {
     'server/server.lua',
     'server/events.lua',
     'server/modules/ranks.lua',
-    'server/modules/dummy.lua',
-    'server/modules/misc.lua'
+    'server/modules/misc.lua',
+    'server/modules/playtime.lua',
 }
 
 client_scripts {
@@ -51,10 +53,9 @@ dependencies {
     'oxmysql',
     'spawnmanager',
     '/server:13005',
-	'/onesync',
+	'/onesync'
 }
 
 exports {
     'getSharedCode'
 }
-
