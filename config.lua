@@ -14,12 +14,12 @@ Config.Disable = {
     Wanted = true,                        -- Disable Wanted Level
     NPC = true,                           -- Removes all NPCs
     InfStamina = true,                    -- Infinite stamina
-    AmmoDisplay = false,                  -- Disable top-right ammo display (takes a bit performance)
+    AmmoDisplay = true,                   -- Disable top-right ammo display (takes a bit performance)
+    GTACrosshair = true,                  -- Disable GTA crosshair (NEW)
     AimAssist = true,                     -- Disable controller AimAssist
     HealthRegeneration = true,            -- No auto-healing
     Minimap = true,                       -- Disable minimap
-    GhostPeak = true,                     -- Prevent shooting through walls
-    MagicBullet = false                   -- Make players not able to shoot though walls (WORK IN PROGRESS)  
+    GhostPeak = false                     -- Prevent shooting through walls (takes performance)
 }
 
 Config.Ranks = {
@@ -81,3 +81,4 @@ Config.DiscordActivity = {
     presence = "[{player_id}] Nage Core | {online_players}/5 | In queue: {queue_number}",
     refresh = 1 * 60 * 1000
 }
+
