@@ -8,7 +8,6 @@ description 'A perfect PVP framework for FiveM'
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/modules/license.lua',
     'server/modules/callback.lua',
     'server/server.lua',
     'server/events.lua',
@@ -58,3 +57,4 @@ dependencies {
 exports {
     'getSharedCode'
 }
+
