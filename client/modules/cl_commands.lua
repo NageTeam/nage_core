@@ -5,6 +5,7 @@ if not localeLoader then
 end
 local locales = load(localeLoader)()
 local locale = locales.new(Config.Locale or "en")
+
 RegisterCommand("clear", function()
     TriggerEvent('chat:clear')
 end, false)
@@ -236,3 +237,4 @@ Citizen.CreateThread(function()
     TriggerEvent('chat:addSuggestion', '/setrank', 'Set a player rank',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}, {name="Rank", help=locale["arg_rank"] or "Put the new rank"}})
     TriggerEvent('chat:addSuggestion', '/kill', 'Kill a player',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}})
 end)
+
