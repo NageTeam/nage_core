@@ -1,9 +1,7 @@
 NAGE = exports['nage']:getSharedCode()
 
-local nPlayer = NAGE.PlayerID()
-local nPlayerPed = NAGE.PlayerPedID()
-
 Citizen.CreateThread(function()
+    local nPlayer = NAGE.PlayerID()
     while true do
         Citizen.Wait(1000)
         if Config.Disable.Wanted then
@@ -22,130 +20,170 @@ end)
 
 if Config.Disable.InfStamina then
     Citizen.CreateThread(function()
+        local player = PlayerId()
+        SetPlayerMaxStamina(player, 1.0)
+    
         while true do
-            Citizen.Wait(1000)
-            RestorePlayerStamina(nPlayer, 1.0)
+            Citizen.Wait(100)
+            local stamina = GetPlayerStamina(player)
+    
+            if stamina < 0.2 then
+                ResetPlayerStamina(player)
+                if Config.Debug then
+                    NagePrint("debug", "Stamina was low - Restored to 100%")
+                end
+            end
         end
     end)
 end
 
 if Config.Disable.AmmoDisplay then
-    CreateThread(function()
+    Citizen.CreateThread(function()
+        local lastWeapon = nil
+    
         while true do
-            Wait(5)
-            DisplayAmmoThisFrame(false)
+            local ped = NAGE.PlayerPedID()
+            local currentWeapon = GetSelectedPedWeapon(ped)
+    
+            if currentWeapon ~= `WEAPON_UNARMED` and not IsPedMeleeWeapon(currentWeapon) then
+                lastWeapon = currentWeapon
+                DisplayAmmoThisFrame(false)
+                Citizen.Wait(0)
+            else
+                lastWeapon = currentWeapon
+                Citizen.Wait(500)
+            end
         end
     end)
+end
+
+function IsPedMeleeWeapon(weaponHash)
+    local meleeWeapons = {
+        `WEAPON_KNIFE`,
+        `WEAPON_NIGHTSTICK`,
+        `WEAPON_HAMMER`,
+        `WEAPON_BAT`,
+        `WEAPON_CROWBAR`,
+        `WEAPON_BOTTLE`,
+        `WEAPON_GOLFCLUB`,
+        `WEAPON_FLASHLIGHT`,
+        `WEAPON_MACHETE`,
+        `WEAPON_BALL`,
+        `WEAPON_STONE_HATCHET`
+    }
+
+    for _, melee in ipairs(meleeWeapons) do
+        if weaponHash == melee then
+            return true
+        end
+    end
+    return false
 end
 
 if Config.Disable.AimAssist then
     SetPlayerTargetingMode(3)
 end
 
+-- Thanks to RodaScripts for Anti GhostPeak (https://github.com/RodericAguilar/Roda_BlockX)
 if Config.Disable.GhostPeak then
-    function RotationToDirection(rotation)
-    	local adjustedRotation = 
-    	{ 
-    		x = (math.pi / 180) * rotation.x, 
-    		y = (math.pi / 180) * rotation.y, 
-    		z = (math.pi / 180) * rotation.z 
-    	}
-    	local direction = 
-    	{
-    		x = -math.sin(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
-    		y = math.cos(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
-    		z = math.sin(adjustedRotation.x)
-    	}
-    	return direction
-    end
-    
-    function RayCastGamePlayWeapon(weapon,distance,flag)
-        local cameraRotation = GetGameplayCamRot()
-        
-        local weapCoord = GetEntityCoords(weapon)
-    
-        local cameraCoord = GetGameplayCamCoord()
-    	local direction = RotationToDirection(cameraRotation)
-    	local destination =  vector3(cameraCoord.x + direction.x * distance, 
-    		cameraCoord.y + direction.y * distance, 
-    		cameraCoord.z + direction.z * distance 
+    local degToRad = math.pi / 180
+    local tolerance = 0.30
+
+    local function RotationToDirection(rot)
+        local xRad, yRad, zRad = rot.x * degToRad, rot.y * degToRad, rot.z * degToRad
+        local cosX = math.abs(math.cos(xRad))
+        return vector3(
+            -math.sin(zRad) * cosX,
+            math.cos(zRad) * cosX,
+            math.sin(xRad)
         )
-        if not flag then
-            flag = 1
-        end
-       
-    	local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(weapCoord.x, weapCoord.y, weapCoord.z, destination.x, destination.y, destination.z, flag, -1, 1))
-    	return b, c, e, destination
     end
-    
-    function RayCastGamePlayCamera(weapon,distance,flag)
-        local cameraRotation = GetGameplayCamRot()
-        
-        local weapCoord = GetEntityCoords(weapon)
-    
-        local cameraCoord = GetGameplayCamCoord()
-    	local direction = RotationToDirection(cameraRotation)
-    	local destination =  vector3(cameraCoord.x + direction.x * distance, 
-    		cameraCoord.y + direction.y * distance, 
-    		cameraCoord.z + direction.z * distance 
+
+    local function RayCast(startCoord, distance, flag)
+        local camRot = GetGameplayCamRot()
+        local dir = RotationToDirection(camRot)
+        local dest = startCoord + (dir * distance)
+        flag = flag or 1
+        local _, hit, hitCoords, _, entity = GetShapeTestResult(
+            StartShapeTestRay(startCoord.x, startCoord.y, startCoord.z, dest.x, dest.y, dest.z, flag, -1, 1)
         )
-        if not flag then
-            flag = 1
-        end
-    
-    	local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(cameraCoord.x, cameraCoord.y, cameraCoord.z, destination.x, destination.y, destination.z, flag, -1, 1))
-    	return b, c, e, destination
+        return hit, hitCoords, entity
     end
-    
+
     Citizen.CreateThread(function()
-        local ped, weapon, pedid, sleep, shoot
         while true do
-             sleep = 500 
-             pedid = NAGE.PlayerID()
-             ped = NAGE.PlayerPedID()
-             weapon = GetCurrentPedWeaponEntityIndex(ped)
-            
-            if weapon > 0 and IsPlayerFreeAiming(pedid) then
-                local hitW, coordsW, entityW = RayCastGamePlayWeapon(weapon, 15.0,1)
-                local hitC, coordsC, entityC = RayCastGamePlayCamera(weapon, 1000.0,1)
-                if hitW > 0 and entityW > 0 and math.abs(#coordsW-#coordsC) > 1 then
-                    sleep = 0
-                    Draw3DText(coordsW.x, coordsW.y, coordsW.z, '❌')
-                    DisablePlayerFiring(ped,true) 
-                    DisableControlAction(0, 106, true) 
+            local playerId = PlayerId()
+            local ped = PlayerPedId()
+
+            if IsPlayerFreeAiming(playerId) then
+                local weapon = GetCurrentPedWeaponEntityIndex(ped)
+                if weapon > 0 then
+                    Citizen.Wait(0)
+
+                    local startWeapon = GetEntityCoords(weapon) - vector3(0, 0, 0.05)
+                    local camCoord = GetGameplayCamCoord()
+
+                    local hitW, coordsW, entityW = RayCast(startWeapon, 15.0)
+                    local hitC, coordsC = RayCast(camCoord, 1000.0)
+
+                    if hitW > 0 and entityW > 0 then
+                        local dist = #(coordsW - coordsC)
+                        if dist > tolerance then
+                            DisablePlayerFiring(playerId, true)
+                            DisableControlAction(0, 106, true)
+                            if Config.Debug then
+                                NagePrint("debug", "Ghost Peaking prevented")
+                            end
+                        end
+                    end
+                else
+                    Citizen.Wait(500)
                 end
             else
-                Citizen.Wait(1000)
-            end    
-            Citizen.Wait(sleep)
+                Citizen.Wait(1500)
+            end
         end
     end)
-    
-    function Draw3DText(x, y, z, text)
-        local onScreen,_x,_y=World3dToScreen2d(x,y,z)
-        if onScreen then
-            SetTextScale(0.3, 0.3)
-            SetTextFont(0)
-            SetTextColour(255, 255, 255, 255)
-            SetTextDropshadow(0, 0, 0, 0, 255)
-            SetTextDropShadow()
-            SetTextOutline()
-            SetTextEntry("STRING")
-            SetTextCentre(1)
-            AddTextComponentString(text)
-            DrawText(_x,_y)
-        end
-    end
 end
 
 if Config.Disable.Minimap then
     Citizen.CreateThread(function()
         while true do
             Citizen.Wait(500)
-            local playerPed = GetPlayerPed(-1)
-            if IsPedOnFoot(playerPed) or IsPedInAnyVehicle(playerPed, true) then
+            local nPlayerPed = NAGE.PlayerPedID()
+            if IsPedOnFoot(nPlayerPed) or IsPedInAnyVehicle(nPlayerPed, true) then
                 DisplayRadar(false)
             end
+        end
+    end)
+end
+
+if Config.Disable.Minimap then
+    Citizen.CreateThread(function()
+        local radarHidden = false
+        while true do
+            Citizen.Wait(1000)
+            local nPlayerPed = NAGE.PlayerPedID()
+            if IsPedOnFoot(nPlayerPed) or IsPedInAnyVehicle(nPlayerPed, true) then
+                if not radarHidden then
+                    DisplayRadar(false)
+                    radarHidden = true
+                end
+            else
+                if radarHidden then
+                    DisplayRadar(true)
+                    radarHidden = false
+                end
+            end
+        end
+    end)
+end
+
+if Config.Disable.GTACrosshair then
+    CreateThread(function()
+        while true do
+            Citizen.Wait(100)
+            HideHudComponentThisFrame(14)
         end
     end)
 end
