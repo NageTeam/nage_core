@@ -13,7 +13,9 @@ if IsDuplicityVersion() then
     NAGE.GetIdentifier = function(nPlayer)
         for i = 0, GetNumPlayerIdentifiers(nPlayer) - 1 do
             local identifier = GetPlayerIdentifier(nPlayer, i)
-            if identifier then return identifier end
+            if identifier then
+                return identifier:gsub("^license:", "")
+            end
         end
         return nil
     end
@@ -61,7 +63,7 @@ if IsDuplicityVersion() then
             return
         end
 
-        oxmysql:query('SELECT * FROM users WHERE identifier LIKE ?', { license }, function(result)
+        oxmysql:query('SELECT * FROM users WHERE license LIKE ?', { license }, function(result)
             if result and result[1] then
                 cb(result[1])
             else

@@ -7,7 +7,7 @@ AddEventHandler("nage:revivePlayer", function(targetId)
     local nPlayer = NAGE.PlayerID(source)
 
     if not NAGE or not NAGE.TriggerCallback then
-        print("^1[Nage Core]^7 TriggerCallback is not defined.")
+        NagePrint("error", "TriggerCallback is not defined.")
         return
     end
 
@@ -41,7 +41,7 @@ AddEventHandler("nage:killPlayer", function(targetId)
     local nPlayer = NAGE.PlayerID(source)
 
     if not NAGE or not NAGE.TriggerCallback then
-        print("^1[Nage Core]^7 TriggerCallback is not defined.")
+        NagePrint("error", "TriggerCallback is not defined.")
         return
     end
 
@@ -75,7 +75,7 @@ AddEventHandler("nage:criticalKill:requestKill", function(victimId)
     local attackerId = source
 
     if not NAGE or not NAGE.TriggerCallback then
-        print("^1[Nage Core]^7 TriggerCallback is not defined.")
+        NagePrint("error", "TriggerCallback is not defined.")
         return
     end
 

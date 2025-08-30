@@ -17,7 +17,7 @@ AddEventHandler("nage:requestRank", function()
     end
 
     if not license then
-        print('^1[Nage Core]^7 ^1[ERROR]^7: ' .. locale["no_license_found"])
+        NagePrint("error", locale["no_license_found"])
         return
     end
 
@@ -41,7 +41,7 @@ AddEventHandler('nage:updateRank', function(nPlayer, newRank)
     end
 
     if not allowed then
-        print(("^1[Nage Core]^7 ^1[ERROR]^7: " .. locale["invalid_rank_attempt"]):format(tostring(newRank)))
+        NagePrint("error", locale["invalid_rank_attempt"], tostring(newRank))
         TriggerClientEvent('nage_notify:notify', nPlayer, {
             title = locale["invalid_rank_notify"]:format(newRank),
             type = 'error'
@@ -59,7 +59,7 @@ AddEventHandler('nage:updateRank', function(nPlayer, newRank)
     end
 
     if not license then
-        print('^1[Nage Core]^7 ^1[ERROR]^7: ' .. locale["no_license_found"])
+        NagePrint("error", locale["no_license_found"])
         return
     end
 
@@ -72,11 +72,11 @@ AddEventHandler('nage:updateRank', function(nPlayer, newRank)
                     rint(("^4[Nage Core]^7 ^5[INFO]^7: " .. locale["rank_updated"]):format(GetPlayerName(nPlayer), oldRank, newRank))
                     TriggerEvent('nage:updatedRank', nPlayer, newRank)
                 else
-                    print(('^4[Nage Core]^7 ^5[INFO]^7: ' .. locale["no_rank_updated"]):format(GetPlayerName(nPlayer)))
+                    NagePrint("info", locale["no_rank_updated"], GetPlayerName(nPlayer))
                 end
             end)
         else
-            print(('^4[Nage Core]^7 ^1[ERROR]^7: ' .. locale["player_not_found_db"]):format(GetPlayerName(nPlayer)))
+            NagePrint("error", locale["player_not_found_db"], GetPlayerName(nPlayer))
         end
     end)
 end)

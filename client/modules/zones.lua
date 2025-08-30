@@ -151,10 +151,10 @@ CreateThread(function()
                         end
                         ResetOptions()
                         if oldZone.debug then
-                            print("🔴 " .. string.format(locale["debug_zone_exited"], currentZone))
+                            NagePrint("debug", locale["debug_zone_exited"], currentZone)
                         end
                         if Config.Debug then
-                            print("^4[Nage Core]^7 ^5[ZONE]^7: " .. string.format(locale["debug_zone_exited"], currentZone))
+                            NagePrint("debug", locale["debug_zone_exited"], currentZone)
                         end
                     end
 
@@ -164,10 +164,10 @@ CreateThread(function()
                     end
                     ApplyOptions(zone.options or {})
                     if zone.debug then
-                        print("🟢 " .. string.format(locale["debug_zone_entered"], zoneName))
+                        NagePrint("success", locale["debug_zone_entered"], zoneName)
                     end
                     if Config.Debug then
-                        print("^4[Nage Core]^7 ^1[ZONE]^7: " .. string.format(locale["debug_zone_entered"], zoneName))
+                        NagePrint("debug", locale["debug_zone_entered"], zoneName)
                     end
                 end
                 break
@@ -180,10 +180,10 @@ CreateThread(function()
                 oldZone.onExit()
             end
             if oldZone.debug then
-                print("🔴 " .. string.format(locale["debug_zone_exited"], currentZone))
+                NagePrint("warn", locale["debug_zone_exited"], currentZone)
             end
             if Config.Debug then
-                print("^4[Nage Core]^7 ^5[ZONE]^7: " .. string.format(locale["debug_zone_exited"], currentZone))
+                NagePrint("debug", locale["debug_zone_exited"], currentZone)
             end
             ResetOptions()
             currentZone = nil

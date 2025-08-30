@@ -29,7 +29,7 @@ Config.Ranks = {
 
 Config.Zones = {
     ["spawn"] = {
-        debug = false,
+        debug = true,
         points = {
             vector2(-430.0104, 1183.6840),
             vector2(-445.2907, 1127.0479),
@@ -81,4 +81,3 @@ Config.DiscordActivity = {
     presence = "[{player_id}] Nage Core | {online_players}/5 | In queue: {queue_number}",
     refresh = 1 * 60 * 1000
 }
-

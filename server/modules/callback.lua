@@ -14,7 +14,7 @@ function NAGE.TriggerCallback(name, source, cb, ...)
     if callback then
         callback(source, cb, ...)
     else
-        print(string.format("^4[Nage Core]^7 ^1[CALLBACK]^7: %s", locale["callback_not_found"]:format(name)))
+        NagePrint("error", locale["callback_not_found"], name)
     end
 end
 
@@ -28,6 +28,6 @@ RegisterNetEvent("nage:triggerCallback", function(name, callbackId, ...)
             TriggerClientEvent("nage:callbackResult", nPlayer, callbackId, ...)
         end, table.unpack(args))
     else
-        print(string.format("^4[Nage Core]^7 ^1[CALLBACK]^7: %s", locale["callback_not_found"]:format(name)))
+        NagePrint("error", locale["callback_not_found"], name)
     end
 end)

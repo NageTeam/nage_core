@@ -14,5 +14,5 @@ AddEventHandler('nage:TogglePVP', function()
     SetCanAttackFriendly(NAGE.PlayerPedID(), pvpEnabled, true)
 
     local status = pvpEnabled and "^2enabled^7" or "^1disabled^7"
-    print("^4[Nage Core]^7 ^5[INFO]^7: PVP is now " .. status)
+    NagePrint("info", "PVP is now %s", status)
 end)

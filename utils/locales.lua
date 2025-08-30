@@ -7,7 +7,7 @@ local function loadLocaleFile(localeName)
     local content = LoadResourceFile(GetCurrentResourceName(), filePath)
 
     if not content then
-        print(("^1[Locale]^7 Missing locale file: %s"):format(filePath))
+        NagePrint("error", "Missing locale file: %s", filePath)
         return {}
     end
 
@@ -16,7 +16,7 @@ local function loadLocaleFile(localeName)
     end)
 
     if not success then
-        print(("^1[Locale]^7 Failed to parse locale file: %s"):format(filePath))
+        NagePrint("error", "Failed to parse locale file: %s", filePath)
         return {}
     end
 

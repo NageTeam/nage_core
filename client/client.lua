@@ -12,7 +12,7 @@ Citizen.CreateThread(function()
     Citizen.Wait(1000)
     if Config.Spawn then
         if Config.Debug then
-            print(string.format("^4[Nage Core]^7 ^2[SUCCESS]^7: " .. locale["debug_spawn_coords"], Config.Spawn.x, Config.Spawn.y, Config.Spawn.z))
+            NagePrint("debug", locale["debug_spawn_coords"], Config.Spawn.x, Config.Spawn.y, Config.Spawn.z)
         end
 
         exports.spawnmanager:setAutoSpawn(true)
@@ -32,7 +32,7 @@ Citizen.CreateThread(function()
             TriggerEvent('nage:starterClothing')
         end
     else
-        print("^4[Nage Core]^7 ^1[ERROR]^7: " .. locale["error_spawn_config_missing"])
+        NagePrint("error", locale["error_spawn_config_missing"])
     end
 end)
 

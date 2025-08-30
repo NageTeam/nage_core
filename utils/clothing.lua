@@ -10,12 +10,12 @@ AddEventHandler('nage:starterClothing', function()
 
     if isResourceRunning('pure-clothing') or isResourceRunning('pure_clothing') then
         if Config.Debug then
-            print("^4[Nage Core]^7 ^6[CLOTHING]^7: Detected Pure Clothing")
+            NagePrint("clothing", "Detected Pure Clothing")
         end
         Wait(100)
         exports['pure-clothing']:initiateApperance()
         return
     end
 
-    print("^4[Nage Core]^7 ^6[CLOTHING]^7: " .. locale["no_clothing_system"])
+    NagePrint("info", locale["no_clothing_system"])
 end)

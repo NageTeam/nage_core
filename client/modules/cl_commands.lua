@@ -143,7 +143,7 @@ RegisterCommand("setrank", function(source, args)
         end
 
         if #args < 2 then
-            print(locale["usage_setrank"])
+            NagePrint("info", locale["usage_setrank"])
             return
         end
         
@@ -151,7 +151,7 @@ RegisterCommand("setrank", function(source, args)
         local rank = args[2]
         
         if not targetPlayer or not GetPlayerName(targetPlayer) then
-            print(locale["invalid_player_id"])
+            NagePrint("error", locale["invalid_player_id"])
             return
         end
         
@@ -209,13 +209,30 @@ AddEventHandler("nage:killPlayer", function()
     SetEntityHealth(ped, 0)
 end)
 
+RegisterCommand("kill2", function(source, args)
+    NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
+        if #args < 1 then
+            nage.notify({ title = "Nage Core", description = locale["must_provide_id"], type = "error" })
+            return
+        end
+
+        local targetId = tonumber(args[1])
+        if not targetId or not GetPlayerName(targetId) then
+            nage.notify({ title = locale["invalid_player_id"], type = "error" })
+            return
+        end
+
+        TriggerServerEvent("nage:killPlayer", targetId)
+    end)
+end, false)
+
 Citizen.CreateThread(function()
     TriggerEvent('chat:addSuggestion', '/clear', 'Clear the current chat',{})
     TriggerEvent('chat:addSuggestion', '/tpm', 'Teleport to waypoint',{})
-    TriggerEvent('chat:addSuggestion', '/goto', 'TP to a player',{{name="ID", help='Put target ID here'}})
-    TriggerEvent('chat:addSuggestion', '/bring', 'Bring someone to you',{{name="ID", help='Put target ID here'}})
-    TriggerEvent('chat:addSuggestion', '/revive', 'Revive a player',{{name="ID", help='Put target ID here'}})
+    TriggerEvent('chat:addSuggestion', '/goto', 'TP to a player',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}})
+    TriggerEvent('chat:addSuggestion', '/bring', 'Bring someone to you',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}})
+    TriggerEvent('chat:addSuggestion', '/revive', 'Revive a player',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}})
     TriggerEvent('chat:addSuggestion', '/rank', 'Check your rank',{})
-    TriggerEvent('chat:addSuggestion', '/setrank', 'Set a player rank',{{name="ID", help='Put target ID here'}, {name="Rank", help='Put the new rank'}})
-    TriggerEvent('chat:addSuggestion', '/kill', 'Kill a player',{{name="ID", help='Put target ID here'}})
+    TriggerEvent('chat:addSuggestion', '/setrank', 'Set a player rank',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}, {name="Rank", help=locale["arg_rank"] or "Put the new rank"}})
+    TriggerEvent('chat:addSuggestion', '/kill', 'Kill a player',{{name="ID", help=locale["arg_target_id"] or "Put target ID here"}})
 end)
