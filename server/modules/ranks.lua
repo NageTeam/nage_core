@@ -32,52 +32,57 @@ end)
 
 RegisterNetEvent('nage:updateRank')
 AddEventHandler('nage:updateRank', function(nPlayer, newRank)
-    local allowed = false
-    for _, rank in ipairs(Config.Ranks.Ranks) do
-        if rank == newRank then
-            allowed = true
-            break
+    NAGE.ServerCallback("nage:checkAdminAccess", function(isAdmin)
+        if not isAdmin then
+            nage.notify({ title = 'You are not admin', type = 'error' })
+            return
         end
-    end
-
-    if not allowed then
-        NagePrint("error", locale["invalid_rank_attempt"], tostring(newRank))
-        TriggerClientEvent('nage_notify:notify', nPlayer, {
-            title = locale["invalid_rank_notify"]:format(newRank),
-            type = 'error'
-        })
-        return
-    end
-
-    local license
-    for i = 0, GetNumPlayerIdentifiers(nPlayer) - 1 do
-        local id = GetPlayerIdentifier(nPlayer, i)
-        if string.sub(id, 1, 7) == "license" then
-            license = id:sub(9)
-            break
+        local allowed = false
+        for _, rank in ipairs(Config.Ranks.Ranks) do
+            if rank == newRank then
+                allowed = true
+                break
+            end
         end
-    end
-
-    if not license then
-        NagePrint("error", locale["no_license_found"])
-        return
-    end
-
-    exports.oxmysql:query('SELECT rank FROM users WHERE license = ?', {license}, function(result)
-        if result and result[1] then
-            local oldRank = result[1].rank
-
-            exports.oxmysql:execute('UPDATE users SET rank = ? WHERE license = ?', {newRank, license}, function(result)
-                if result and result.affectedRows and result.affectedRows > 0 then
-                    rint(("^4[Nage Core]^7 ^5[INFO]^7: " .. locale["rank_updated"]):format(GetPlayerName(nPlayer), oldRank, newRank))
-                    TriggerEvent('nage:updatedRank', nPlayer, newRank)
-                else
-                    NagePrint("info", locale["no_rank_updated"], GetPlayerName(nPlayer))
-                end
-            end)
-        else
-            NagePrint("error", locale["player_not_found_db"], GetPlayerName(nPlayer))
+    
+        if not allowed then
+            NagePrint("error", locale["invalid_rank_attempt"], tostring(newRank))
+            TriggerClientEvent('nage_notify:notify', nPlayer, {
+                title = locale["invalid_rank_notify"]:format(newRank),
+                type = 'error'
+            })
+            return
         end
+    
+        local license
+        for i = 0, GetNumPlayerIdentifiers(nPlayer) - 1 do
+            local id = GetPlayerIdentifier(nPlayer, i)
+            if string.sub(id, 1, 7) == "license" then
+                license = id:sub(9)
+                break
+            end
+        end
+    
+        if not license then
+            NagePrint("error", locale["no_license_found"])
+            return
+        end
+    
+        exports.oxmysql:query('SELECT rank FROM users WHERE license = ?', {license}, function(result)
+            if result and result[1] then
+                local oldRank = result[1].rank
+    
+                exports.oxmysql:execute('UPDATE users SET rank = ? WHERE license = ?', {newRank, license}, function(result)
+                    if result and result.affectedRows and result.affectedRows > 0 then
+                        NagePrint(("^4[Nage Core]^7 ^5[INFO]^7: " .. locale["rank_updated"]):format(GetPlayerName(nPlayer), oldRank, newRank))
+                        TriggerEvent('nage:updatedRank', nPlayer, newRank)
+                    else
+                        NagePrint("info", locale["no_rank_updated"], GetPlayerName(nPlayer))
+                    end
+                end)
+            else
+                NagePrint("error", locale["player_not_found_db"], GetPlayerName(nPlayer))
+            end
+        end)
     end)
 end)
-
