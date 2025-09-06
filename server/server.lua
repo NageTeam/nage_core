@@ -12,7 +12,7 @@ local locale = locales.new(Config.Locale or "en")
 local requiredResourceName = "nage"
 local localVersion = "1.0.3"
 local developer = "Nage Team"
-local githubVersionUrl = "https://raw.githubusercontent.com/LueFlue/versioner/main/nagecore"
+local githubVersionUrl = "https://raw.githubusercontent.com/NageTeam/nage_core/main/version.txt"
 
 if GetCurrentResourceName() ~= requiredResourceName then
     NagePrint("error", locale["resource_wrong_name"], requiredResourceName)
