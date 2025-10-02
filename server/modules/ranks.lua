@@ -32,9 +32,14 @@ end)
 
 RegisterNetEvent('nage:updateRank')
 AddEventHandler('nage:updateRank', function(nPlayer, newRank)
-    NAGE.ServerCallback("nage:checkAdminAccess", function(isAdmin)
+    local nPlayer = NAGE.PlayerID(source)
+
+    NAGE.TriggerCallback("nage:checkAdminAccess", nPlayer, function(isAdmin)
         if not isAdmin then
-            nage.notify({ title = 'You are not admin', type = 'error' })
+            TriggerClientEvent('nage_notify:notify', nPlayer, {
+                title = locale["not_admin"],
+                type = 'error'
+            })
             return
         end
         local allowed = false
@@ -74,10 +79,10 @@ AddEventHandler('nage:updateRank', function(nPlayer, newRank)
     
                 exports.oxmysql:execute('UPDATE users SET rank = ? WHERE license = ?', {newRank, license}, function(result)
                     if result and result.affectedRows and result.affectedRows > 0 then
-                        NagePrint(("^4[Nage Core]^7 ^5[INFO]^7: " .. locale["rank_updated"]):format(GetPlayerName(nPlayer), oldRank, newRank))
+                        NagePrint("info", locale["rank_updated"]:format(GetPlayerName(nPlayer), oldRank, newRank))
                         TriggerEvent('nage:updatedRank', nPlayer, newRank)
                     else
-                        NagePrint("info", locale["no_rank_updated"], GetPlayerName(nPlayer))
+                        NagePrint("info", locale["no_rank_updated"]:format(GetPlayerName(nPlayer)))
                     end
                 end)
             else

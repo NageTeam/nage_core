@@ -9,11 +9,19 @@ local locale = locales.new(Config.Locale or "en")
 local function DrawZone(zone)
     if not zone.points or #zone.points < 3 then return end
 
-    local z = GetEntityCoords(NAGE.PlayerPedID()).z
+    local r, g, b = 181, 132, 0 
+
     for i = 1, #zone.points do
         local p1 = zone.points[i]
         local p2 = zone.points[i + 1] or zone.points[1]
-        DrawLine(p1.x, p1.y, z, p2.x, p2.y, z, debugColor.r, debugColor.g, debugColor.b, debugColor.a)
+
+        local bottom1 = vector3(p1.x, p1.y, zone.minZ)
+        local bottom2 = vector3(p2.x, p2.y, zone.minZ)
+        local top1    = vector3(p1.x, p1.y, zone.maxZ)
+        local top2    = vector3(p2.x, p2.y, zone.maxZ)
+
+        DrawPoly(bottom1, bottom2, top1, r, g, b, 120)
+        DrawPoly(top1, bottom2, top2, r, g, b, 120)
     end
 end
 
@@ -194,20 +202,21 @@ CreateThread(function()
 end)
 
 CreateThread(function()
-    local anyDebugZones = false
-    for _, zone in pairs(Config.Zones) do
-        if zone.debug then
-            anyDebugZones = true
-            break
-        end
-    end
-
-    if not anyDebugZones then return end
-
     while true do
+        local sleep = 750
+        local anyDebugZones = false
+
         for _, zone in pairs(Config.Zones) do
-            if zone.debug then DrawZone(zone) end
+            if zone.debug then
+                DrawZone(zone)
+                anyDebugZones = true
+            end
         end
-        Wait(100)
+
+        if anyDebugZones then
+            sleep = 1
+        end
+
+        Wait(sleep)
     end
 end)

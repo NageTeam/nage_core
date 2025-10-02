@@ -1,5 +1,5 @@
 NAGE = exports['nage']:getSharedCode()
-NAGE.ServerCallbacks = {}
+NAGE.PlayerCache = {}
 
 local localeLoader = LoadResourceFile(GetCurrentResourceName(), "utils/locales.lua")
 if not localeLoader then
@@ -10,8 +10,7 @@ local locales = load(localeLoader)()
 local locale = locales.new(Config.Locale or "en")
 
 local requiredResourceName = "nage"
-local localVersion = "1.0.3"
-local developer = "Nage Team"
+local localVersion = GetResourceMetadata(GetCurrentResourceName(), "version")
 local githubVersionUrl = "https://raw.githubusercontent.com/NageTeam/nage_core/main/version.txt"
 
 if GetCurrentResourceName() ~= requiredResourceName then
@@ -33,6 +32,16 @@ local function printBanner()
     ^0]])
 end
 
+local function formatNumber(n)
+    if not n then return "0" end
+    local formatted = tostring(n)
+    while true do
+        formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1.%2")
+        if k == 0 then break end
+    end
+    return formatted
+end
+
 AddEventHandler('onResourceStart', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
 
@@ -44,19 +53,22 @@ local function GetPlayerIdentifiersInfo(nPlayer)
     nPlayer = tonumber(nPlayer)
     if not nPlayer or nPlayer <= 0 then return nil end
 
+    if NAGE.PlayerCache[nPlayer] then
+        return NAGE.PlayerCache[nPlayer]
+    end
+
     local rawIds = GetPlayerIdentifiers(nPlayer)
     if not rawIds or #rawIds == 0 then
-        print(("^1[Nage Core]^7 [ERROR]: " .. locale["no_identifiers_found"]):format(NAGE.GetPlayerName(nPlayer) or "Unknown",
-            nPlayer))
+        NagePrint("error", locale["no_identifiers_found"], NAGE.GetPlayerName(nPlayer) or "Unknown", nPlayer)
         return nil
     end
 
     local identifiers = {
-        discord = nil,
+        discord    = nil,
         steam_name = NAGE.GetPlayerName(nPlayer) or "Unknown",
-        steam_id = nil,
-        license = nil,
-        fivem_id = tostring(nPlayer)
+        steam_id   = nil,
+        license    = nil,
+        fivem_id   = tostring(nPlayer)
     }
 
     for _, id in ipairs(rawIds) do
@@ -69,9 +81,10 @@ local function GetPlayerIdentifiersInfo(nPlayer)
         end
     end
 
+    NAGE.PlayerCache[nPlayer] = identifiers
+
     return identifiers
 end
-
 local function updateLastConnected(nPlayer)
     local idInfo = GetPlayerIdentifiersInfo(nPlayer)
     if not idInfo or not idInfo.license then return end
@@ -89,8 +102,7 @@ local function AddPlayerToDatabase(nPlayer)
     local idInfo = GetPlayerIdentifiersInfo(nPlayer)
     if not idInfo or not idInfo.license or idInfo.license == "" then
         NagePrint("error", locale["invalid_player_license"])
-        DropPlayer(nPlayer,
-            "[Nage Core] You do not have a valid license or identifier. Please contact the server administrator.")
+        DropPlayer(nPlayer, "[Nage Core] You do not have a valid license or identifier. Please contact the server administrator.")
         return
     end
 
@@ -116,7 +128,7 @@ local function AddPlayerToDatabase(nPlayer)
             end
         else
             exports.oxmysql:insert(
-            'INSERT INTO users (discord, steam_name, steam_id, license, fivem_id, money, rank, last_connected) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO users (discord, steam_name, steam_id, license, fivem_id, money, rank, last_connected) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 {
                     idInfo.discord,
                     idInfo.steam_name,
@@ -128,7 +140,8 @@ local function AddPlayerToDatabase(nPlayer)
                     nil
                 }, function(insertId)
                     NagePrint("info", locale["new_player_added"], idInfo.steam_name, insertId or "unknown")
-            end)
+                end
+            )
         end
     end)
 end
@@ -137,7 +150,7 @@ local function checkVersionAndInitDB()
     PerformHttpRequest(githubVersionUrl, function(statusCode, response, _)
         if statusCode ~= 200 or not response then
             printBanner()
-            print("^4[Nage Core]^7 " .. locale["could_not_check_update"])
+            NagePrint("error", locale["could_not_check_update"])
             return
         end
 
@@ -149,8 +162,6 @@ local function checkVersionAndInitDB()
             print("^1[Nage Core]^7 Latest version  : v" .. remoteVersion .. "^0")
             return
         end
-
-        local startTime = os.clock()
         
         exports.oxmysql:query([[
             CREATE TABLE IF NOT EXISTS `users` (
@@ -163,9 +174,9 @@ local function checkVersionAndInitDB()
                 `money` INT DEFAULT 0,
                 `rank` VARCHAR(50) DEFAULT 'user',
                 `last_connected` VARCHAR(50) DEFAULT 'Never',
-                `total_played` INT DEFAULT 0
+                `total_played` VARCHAR(50) DEFAULT NULL
             );
-            ]], {}, function(result)
+        ]], {}, function(result)
             if result == nil then
                 print("^1[Nage Core]^7 ^1[ERROR]^7: Failed to create or check users table.")
                 if Config.Debug then
@@ -174,13 +185,18 @@ local function checkVersionAndInitDB()
                 return
             end
 
-            local loadTime = string.format("%.2f", (os.clock() - startTime) * 1000)
-            printBanner()
-            print("^2[Nage Core]^7 Nage Core is ^2Updated!^0")
-            print("^2[Nage Core]^7 Developer  : " .. developer .. "^0")
-            print("^2[Nage Core]^7 Version    : v" .. localVersion .. "^0")
-            print("^2[Nage Core]^7 Load Time  : " .. loadTime .. "ms^0")
-            print('^4[Nage Core]^7 ^5[INFO]^7: Database connection established\n')
+            exports.oxmysql:query('SELECT COUNT(*) as total FROM users', {}, function(result)
+                local totalUsers = 0
+                if result and result[1] then
+                    totalUsers = result[1].total
+                end
+
+                printBanner()
+                print("^2[Nage Core]^7 Nage Core is ^2Updated!^0")
+                print("^2[Nage Core]^7 Version       : v" .. localVersion .. "^0")
+                print("^2[Nage Core]^7 Total Users   : " .. formatNumber(totalUsers) .. "^0")
+                print('^4[Nage Core]^7 ^5[INFO]^7: Database connection established\n')
+            end)
         end)
     end)
 end
@@ -224,6 +240,21 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     deferrals.update("[Nage Core] Checking your identifiers...")
 
     local idInfo = GetPlayerIdentifiersInfo(nPlayer)
+    local identifiers = GetPlayerIdentifiers(nPlayer)
+    local hasSteam = false
+
+    for _, id in ipairs(identifiers) do
+        if id:find("steam:") then
+            hasSteam = true
+            break
+        end
+    end
+
+    if not hasSteam then
+        deferrals.done("Steam Authentication Failed!\n Make sure Steam is running or restart FiveM. Find more information in console\n")
+        NagePrint("error", "Steam Auth Failed for player " .. playerName .. ". Check sv_licenseKey in server.cfg. Please reset or register a key on ^5https://steamcommunity.com/dev/apikey^7")
+        return
+    end
 
     if not idInfo or not idInfo.license then
         deferrals.done("[Nage Core] Missing valid license. Please restart FiveM or Steam.")
@@ -233,7 +264,7 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
 
     if Config.Debug then
         NagePrint("debug", locale["player_identifiers"])
-        for _, id in pairs(GetPlayerIdentifiers(nPlayer)) do
+        for _, id in pairs(identifiers) do
             if not id:find("^ip:") then
                 NagePrint("debug", "→ %s", id)
             end
@@ -243,19 +274,13 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     deferrals.update("[Nage Core] Searching your profile in the database...")
 
     AddPlayerToDatabase(nPlayer)
+    Wait(100)
 
     exports.oxmysql:query('SELECT rank FROM users WHERE license = ?', { idInfo.license }, function(result)
         local rank = result and result[1] and result[1].rank or "user"
 
         CreateThread(function()
-            if Config.Ranks.Admins[rank] then
-                deferrals.update(
-                '[Nage Core] 👑 Welcome back, your majesty. Please try not to "accidentally" ban everyone & break everything again. 😏')
-                Wait(2500)
-            else
-                deferrals.update("[Nage Core] Welcome " .. playerName .. "! Finalizing login...")
-            end
-
+            deferrals.update("[Nage Core] Welcome " .. playerName .. "! Finalizing login...")
             Wait(500)
             deferrals.done()
             NagePrint("success", locale["player_connected_rank"], playerName, rank)
@@ -264,49 +289,17 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
 end)
 
 AddEventHandler('playerDropped', function(reason)
-    local id = source
-    local playerName = NAGE.GetPlayerName(id) or "Unknown"
+    local nPlayer = NAGE.PlayerID(source)
+    local idInfo = NAGE.PlayerCache[nPlayer]
 
-    NagePrint("error", locale["player_disconnected"], playerName, reason or "Unknown")
-end)
-
-NAGE.ServerCallback("nage:checkAdminAccess", function(source, cb)
-    if not source or source == 0 then
-        cb(false)
-        return
+    if idInfo then
+        NagePrint("info", locale["player_disconnected"], idInfo.steam_name, reason or "Unknown")
+    else
+        local playerName = NAGE.GetPlayerName(nPlayer) or "Unknown"
+        NagePrint("warn", ("Player %s (src %s) disconnected without cached identifiers. Reason: %s"):format(playerName, nPlayer, reason or "Unknown"))
     end
 
-    local license
-    for _, id in pairs(GetPlayerIdentifiers(source)) do
-        if id:find("license:") then
-            license = id:sub(9)
-            break
-        end
-    end
-
-    if not license then
-        cb(false)
-        return
-    end
-
-    exports.oxmysql:query("SELECT `rank` FROM users WHERE license = ?", { license }, function(result)
-        if not result or not result[1] then
-            cb(false)
-            return
-        end
-
-        local userGroup = result[1].rank
-
-        local isAdmin = false
-        for _, rank in pairs(Config.Ranks.Admins) do
-            if rank:lower() == userGroup:lower() then
-                isAdmin = true
-                break
-            end
-        end
-
-        cb(isAdmin)
-    end)
+    NAGE.PlayerCache[nPlayer] = nil
 end)
 
 RegisterNetEvent("nage:bringPlayer", function(targetId)
@@ -327,8 +320,8 @@ AddEventHandler("nage:gotoPlayer", function(targetId)
         return
     end
 
-    local targetPed = GetPlayerPed(targetId)
-    local targetCoords = GetEntityCoords(targetPed)
+    local targetPed = NAGE.PlayerPedID(targetId)
+    local targetCoords = NAGE.GetCoords(targetPed)
 
     TriggerClientEvent('nage:teleportPlayer', nPlayer, targetCoords.x, targetCoords.y, targetCoords.z + 1.0)
 end)

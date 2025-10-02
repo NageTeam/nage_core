@@ -1,18 +1,18 @@
-local Callbacks = {}
+NAGE = exports['nage']:getSharedCode()
+
 local callbackId = 0
-NAGE = NAGE or {}
+local pendingCallbacks = {}
 
 function NAGE.TriggerServerCallback(name, cb, ...)
-    callbackId = callbackId + 1
-    local id = callbackId
-
-    Callbacks[id] = cb
-    TriggerServerEvent("nage:triggerCallback", name, id, ...)
+    callbackId += 1
+    pendingCallbacks[callbackId] = cb
+    TriggerServerEvent("nage:triggerCallback", name, callbackId, ...)
 end
 
-RegisterNetEvent("nage:callbackResult", function(id, ...)
-    if Callbacks[id] then
-        Callbacks[id](...)
-        Callbacks[id] = nil
+RegisterNetEvent("nage:callbackResult", function(cbId, ...)
+    local cb = pendingCallbacks[cbId]
+    if cb then
+        pendingCallbacks[cbId] = nil
+        cb(...)
     end
 end)

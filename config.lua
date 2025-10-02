@@ -1,8 +1,9 @@
 Config = {}
 
 Config.Debug = false                       -- Use this for debugging the core
-Config.Locale = "en"                       -- Set locale/language (en/da)
+Config.Locale = "en"                       -- Set locale/language (Look at the locale folder)
 Config.Money = 2500                        -- The starting money you get when joining for the first time
+Config.PlayTime = false                    -- Enable/Disable playtime tracking (BUGGED, WE ARE WORKING ON IT)
 Config.Spawn = {                           -- Where you will spawn when you join
     x = -413.1252,
     y = 1168.0978,
@@ -11,15 +12,25 @@ Config.Spawn = {                           -- Where you will spawn when you join
 }
 
 Config.Disable = {
-    Wanted = true,                        -- Disable Wanted Level
-    NPC = true,                           -- Removes all NPCs
-    InfStamina = true,                    -- Infinite stamina
-    AmmoDisplay = true,                   -- Disable top-right ammo display (takes a bit performance)
-    GTACrosshair = true,                  -- Disable GTA crosshair (NEW)
-    AimAssist = true,                     -- Disable controller AimAssist
-    HealthRegeneration = true,            -- No auto-healing
-    Minimap = true,                       -- Disable minimap
-    GhostPeak = false                     -- Prevent shooting through walls (takes performance)
+    Wanted = true,                         -- Disable Wanted Level
+    NPC = true,                            -- Removes all NPCs
+    InfStamina = true,                     -- Infinite stamina
+    AmmoDisplay = true,                    -- Disable top-right ammo display
+    GTACrosshair = true,                   -- Disable GTA crosshair
+    AimAssist = true,                      -- Disable controller AimAssist
+    HealthRegeneration = true,             -- No auto-healing
+    Minimap = true,                        -- Disable minimap
+    GhostPeak = false                      -- Prevent shooting through walls (BUGGED, WE ARE WORKING ON IT)
+}
+
+Config.PauseMenu = {
+    -- {player_id} = Player ID
+    -- {player_name} = Player Name
+    -- {online_players} = Online Players
+    Title = 'Build with Nage Core',        -- Title of the pause menu
+    Map = 'Map',                           -- Map category name
+    Settings = 'Settings & Keybinds',      -- Settings category name
+    Keybinds = 'Nage | Keybinds'           -- Keybinds submenu name
 }
 
 Config.Ranks = {
@@ -28,8 +39,8 @@ Config.Ranks = {
 }
 
 Config.Zones = {
-    ["spawn"] = {
-        debug = true,
+    ["Spawn"] = {
+        debug = true,                     -- Enable debug for this zone
         points = {
             vector2(-430.0104, 1183.6840),
             vector2(-445.2907, 1127.0479),
@@ -64,8 +75,13 @@ Config.Zones = {
     -- Add / Remove zones
 }
 
-Config.DiscordActivity = {
-    appId = YOUR_BOT_CLIENT_ID,         -- Discord Bot Client ID
+Config.DiscordActivity = { 
+    -- {player_id} = Player ID
+    -- {player_name} = Player Name
+    -- {online_players} = Online Players
+    -- {queue_number} = Queue Number
+    -- {zone_status} = Current Zone (In/Out)
+    appId = YOUR_BOT_CLIENT_ID,          -- Discord Bot Client ID
     assetName = "LargeIcon",
     assetText = "Nage Core",
     buttons = {
@@ -79,5 +95,5 @@ Config.DiscordActivity = {
         }
     },
     presence = "[{player_id}] Nage Core | {online_players}/5 | In queue: {queue_number}",
-    refresh = 1 * 60 * 1000
+    refresh = 100
 }

@@ -3,7 +3,7 @@ game 'gta5'
 lua54 'yes'
 license 'Nage License'
 author 'Nage Team - https://discord.gg/ddMtV2CwJj'
-version '1.0.3'
+version '1.0.4'
 description 'A perfect PVP framework for FiveM'
 
 shared_script 'utils/nageprint.lua'
@@ -29,6 +29,7 @@ client_scripts {
     'client/modules/crouch.lua',
     'client/modules/movement.lua',
     'client/modules/zones.lua',
+    'client/modules/pausemenu.lua',
     'utils/export.lua',
     'utils/clothing.lua',
     'utils/shared.lua',

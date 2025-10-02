@@ -1,4 +1,5 @@
 NAGE = exports['nage']:getSharedCode()
+
 local localeLoader = LoadResourceFile(GetCurrentResourceName(), "utils/locales.lua")
 if not localeLoader then
     error("^4[Nage Core]^7 ^1[ERROR]^7: 'utils/locales.lua' could not be loaded in resource: " .. GetCurrentResourceName())
@@ -6,11 +7,11 @@ end
 local locales = load(localeLoader)()
 local locale = locales.new(Config.Locale or "en")
 
-RegisterCommand("clear", function()
+NAGE.RegisterCommand("clear", "Clear the current chat", function()
     TriggerEvent('chat:clear')
-end, false)
+end)
 
-RegisterCommand("tpm", function()
+NAGE.RegisterCommand("tpm", "Teleport to waypoint", function()
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
         if not isAdmin then
             nage.notify({ title = locale["not_admin"], type = 'error' })
@@ -42,9 +43,9 @@ RegisterCommand("tpm", function()
         FreezeEntityPosition(NAGE.PlayerPedID(), false)
         DoScreenFadeIn(500)
     end)
-end, false)
+end)
 
-RegisterCommand("goto", function(source, args)
+NAGE.RegisterCommand("goto", "Teleport to a player", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
         if not isAdmin then
             nage.notify({ title = locale["not_admin"], type = 'error' })
@@ -64,9 +65,9 @@ RegisterCommand("goto", function(source, args)
 
         TriggerServerEvent("nage:gotoPlayer", targetId)
     end)
-end, false)
+end)
 
-RegisterCommand("bring", function(source, args)
+NAGE.RegisterCommand("bring", "Bring someone to you", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
         if not isAdmin then
             nage.notify({ title = locale["not_admin"], type = 'error' })
@@ -86,9 +87,9 @@ RegisterCommand("bring", function(source, args)
 
         TriggerServerEvent("nage:bringPlayer", targetId)
     end)
-end, false)
+end)
 
-RegisterCommand("revive", function(source, args)
+NAGE.RegisterCommand("revive", "Revive a player", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
         if not isAdmin then
             nage.notify({ title = locale["not_admin"], type = 'error' })
@@ -108,9 +109,9 @@ RegisterCommand("revive", function(source, args)
 
         TriggerServerEvent("nage:revivePlayer", targetId)
     end)
-end, false)
+end)
 
-RegisterCommand("kill", function(source, args)
+NAGE.RegisterCommand("kill", "Kill a player", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
         if not isAdmin then
             nage.notify({ title = locale["not_admin"], type = 'error' })
@@ -130,13 +131,13 @@ RegisterCommand("kill", function(source, args)
 
         TriggerServerEvent("nage:killPlayer", targetId)
     end)
-end, false)
+end)
 
-RegisterCommand("rank", function()
+NAGE.RegisterCommand("rank", "Check your rank", function()
     TriggerServerEvent("nage:requestRank")
-end, false)
+end)
 
-RegisterCommand("setrank", function(source, args)
+NAGE.RegisterCommand("setrank", "Set a player's rank", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
         if not isAdmin then
             nage.notify({ title = locale["not_admin"], type = 'error' })
@@ -158,7 +159,7 @@ RegisterCommand("setrank", function(source, args)
         
         TriggerServerEvent('nage:updateRank', targetPlayer, rank)
     end)
-end, false)
+end)
 
 RegisterNetEvent("nage:receiveRank")
 AddEventHandler("nage:receiveRank", function(rank)
@@ -208,32 +209,4 @@ RegisterNetEvent("nage:killPlayer")
 AddEventHandler("nage:killPlayer", function()
     local ped = NAGE.PlayerPedID()
     SetEntityHealth(ped, 0)
-end)
-
-RegisterCommand("kill2", function(source, args)
-    NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
-        if #args < 1 then
-            nage.notify({ title = "Nage Core", description = locale["must_provide_id"], type = "error" })
-            return
-        end
-
-        local targetId = tonumber(args[1])
-        if not targetId or not GetPlayerName(targetId) then
-            nage.notify({ title = locale["invalid_player_id"], type = "error" })
-            return
-        end
-
-        TriggerServerEvent("nage:killPlayer", targetId)
-    end)
-end, false)
-
-Citizen.CreateThread(function()
-    TriggerEvent('chat:addSuggestion', '/clear', 'Clear the current chat',{})
-    TriggerEvent('chat:addSuggestion', '/tpm', 'Teleport to waypoint',{})
-    TriggerEvent('chat:addSuggestion', '/goto', 'TP to a player',{{name="ID", help="Put target ID here"}})
-    TriggerEvent('chat:addSuggestion', '/bring', 'Bring someone to you',{{name="ID", help="Put target ID here"}})
-    TriggerEvent('chat:addSuggestion', '/revive', 'Revive a player',{{name="ID", help="Put target ID here"}})
-    TriggerEvent('chat:addSuggestion', '/rank', 'Check your rank',{})
-    TriggerEvent('chat:addSuggestion', '/setrank', 'Set a player rank',{{name="ID", help="Put target ID here"}, {name="Rank", help="Put the new rank"}})
-    TriggerEvent('chat:addSuggestion', '/kill', 'Kill a player',{{name="ID", help="Put target ID here"}})
 end)
