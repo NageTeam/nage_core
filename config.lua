@@ -87,13 +87,14 @@ Config.DiscordActivity = {
     buttons = {
         { 
             label = "Join Server", 
-            url = "fivem://connect/67mxv7" 
+            url = "fivem://connect/YOUR_SERVER" 
         },
         { 
             label = "Discord", 
-            url = "https://discord.gg/8gj6tHPj8F" 
+            url = "https://discord.gg/ddMtV2CwJj" 
         }
     },
     presence = "[{player_id}] Nage Core | {online_players}/5 | In queue: {queue_number}",
     refresh = 100
 }
+
