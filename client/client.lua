@@ -23,13 +23,15 @@ Citizen.CreateThread(function()
             y = Config.Spawn.y,
             z = Config.Spawn.z,
             heading = Config.Spawn.w,
-            model = "a_m_y_skater_01", -- mp_m_freemode_01
-            skipFade = false
+            model = "mp_m_freemode_01",
+            skipFade = true
         })
+
+        TriggerEvent('nage:starterClothing')
+
         if firstSpawn then
             firstSpawn = false
             TriggerServerEvent('nage:checkFirstJoin')
-            TriggerEvent('nage:starterClothing')
         end
     else
         NagePrint("error", locale["error_spawn_config_missing"])
@@ -41,62 +43,66 @@ AddEventHandler("playerSpawned", function()
 	NetworkSetFriendlyFireOption(true)
 end)
 
-local criticalBones = {
-    [31086] = true, [39317] = true, [39318] = true,
-    [27474] = true, [24817] = true, [24816] = true,
-    [27473] = true, [24810] = true, [10706] = true,
-    [23553] = true, [58866] = true
+local headBones = {
+    [31086] = true, -- SKEL_Head
+    [39317] = true, -- SKEL_Neck_1
+    [12844] = true, -- IK_Head
+    [25260] = true, -- FB_L_Eye_000
+    [27474] = true, -- FB_R_Eye_000
+    [46240] = true, -- FB_Jaw_000
 }
 
-local meleeWeapons = {
-    [GetHashKey("WEAPON_UNARMED")] = true,
-    [GetHashKey("WEAPON_BAT")] = true,
-    [GetHashKey("WEAPON_KNIFE")] = true,
-    [GetHashKey("WEAPON_CROWBAR")] = true,
+local ignoreWeapons = {
     [GetHashKey("WEAPON_DAGGER")] = true,
+    [GetHashKey("WEAPON_BAT")] = true,
+    [GetHashKey("WEAPON_BOTTLE")] = true,
+    [GetHashKey("WEAPON_CROWBAR")] = true,
+    [GetHashKey("WEAPON_UNARMED")] = true,
     [GetHashKey("WEAPON_FLASHLIGHT")] = true,
     [GetHashKey("WEAPON_GOLFCLUB")] = true,
     [GetHashKey("WEAPON_HAMMER")] = true,
     [GetHashKey("WEAPON_HATCHET")] = true,
     [GetHashKey("WEAPON_KNUCKLE")] = true,
+    [GetHashKey("WEAPON_KNIFE")] = true,
     [GetHashKey("WEAPON_MACHETE")] = true,
     [GetHashKey("WEAPON_SWITCHBLADE")] = true,
+    [GetHashKey("WEAPON_NIGHTSTICK")] = true,
     [GetHashKey("WEAPON_WRENCH")] = true,
+    [GetHashKey("WEAPON_BATTLEAXE")] = true,
     [GetHashKey("WEAPON_POOLCUE")] = true,
     [GetHashKey("WEAPON_STONE_HATCHET")] = true,
-    [GetHashKey("WEAPON_NIGHTSTICK")] = true
 }
 
-AddEventHandler("gameEventTriggered", function(name, args)
-    if name ~= "CEventNetworkEntityDamage" then return end
+AddEventHandler('gameEventTriggered', function(name, args)
+    if name ~= 'CEventNetworkEntityDamage' then return end
 
-    local victimNetId = args[1]
-    local attackerNetId = args[2]
-    local victimPed = NetToPed(victimNetId)
-    local attackerPed = NetToPed(attackerNetId)
+    local victim = tonumber(args[1])
+    local attacker = tonumber(args[2])
 
-    if attackerPed ~= NAGE.PlayerPedID() then return end
-    if not DoesEntityExist(victimPed) then return end
-
-    local success, bone = GetPedLastDamageBone(victimPed)
-    if not success then return end
-
-    if criticalBones[bone] then
-        local weapon = GetPedCauseOfDeath(victimPed)
-        if not meleeWeapons[weapon] then
-            local victimPlayer = NetworkGetPlayerIndexFromPed(victimPed)
-            if victimPlayer ~= -1 then
-                local victimServerId = GetPlayerServerId(victimPlayer)
-                TriggerServerEvent("nage:criticalKill:requestKill", victimServerId)
-            end
-        end
+    if not DoesEntityExist(victim) or not DoesEntityExist(attacker) then 
+        return 
     end
-end)
+    if not IsPedAPlayer(victim) or not IsPedAPlayer(attacker) then 
+        return 
+    end
 
-RegisterNetEvent("nage:criticalKill:forceKill", function()
-    local ped = NAGE.PlayerPedID()
-    if DoesEntityExist(ped) and not IsEntityDead(ped) then
-        ApplyDamageToPed(ped, 9999, true)
-        SetPedArmour(ped, 0)
+    local bulletHit, boneHit = GetPedLastDamageBone(victim)
+    if not bulletHit then 
+        return 
+    end
+
+    local weaponHash = GetSelectedPedWeapon(attacker)
+    if ignoreWeapons[weaponHash] then 
+        return 
+    end
+
+    if boneHit and headBones[boneHit] then
+        SetPedArmour(victim, 0)
+        SetEntityHealth(victim, 0)
+        
+        if not IsEntityDead(victim) then
+            SetPedArmour(victim, 0)
+            SetEntityHealth(victim, 0)
+        end
     end
 end)

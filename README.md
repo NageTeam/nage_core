@@ -1,21 +1,29 @@
-# Welcome to Nage Core, perfect to PVP
+# Nage Core - Perfect for PvP
+
+Welcome to **Nage Core**, a lightweight framework designed for fast, reliable PVP servers.
+
+---
 
 ## License
-This project is licensed under the Nage Core License.
+This project is licensed under the **Nage Core License**.  
+Refer to the license file before using or distributing this resource.
 
-## Clothing
-----------------------------------------------------------------------
+---
 
-## Pure-Clothing
+## Clothing Integration
 
-1. Open `config.lua` and set:
+### Pure-Clothing Setup
+
+> Follow these steps to enable Pure-Clothing in standalone mode.
+
+1. Open **`config.lua`** and set:
+   ```lua
    Config.Framework = "standalone"
-
-2. Go to `server/framework/standalone/sv_functions.lua`
-   Find the function `getPlayerUniqueId(source)` and replace it with:
-
+   ```
+2. Nagivate to server/framework/standalone/sv_functions.lua and replace the `getPlayerUniqueId(source)` with:
+   ```
    NAGE = exports['nage']:getSharedCode()
-
+   
    function getPlayerUniqueId(source)
        if not source then return false end
 
@@ -28,14 +36,13 @@ This project is licensed under the Nage Core License.
 
        return false
    end
+   ```
+2. Restart the server or script
 
-3. Restart the pure-clothing resource or your server.
+---
 
-## Links
-----------------------------------------------------------------------
-- [Documentation](https://nage-core.gitbook.io/nage-core/)
-  - For installation, setup, and everything else.
+# Links
+- [Documentation](https://nage-core.gitbook.io/nage-core/) 
 - [txAdmin recipe](https://github.com/NageTeam/txAdminRecipe)
-  - Install and configure Nage Core
 - [Discord](discord.gg/ddMtV2CwJj)
-  - For quick support and talking with our community
+

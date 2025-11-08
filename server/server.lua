@@ -85,6 +85,7 @@ local function GetPlayerIdentifiersInfo(nPlayer)
 
     return identifiers
 end
+
 local function updateLastConnected(nPlayer)
     local idInfo = GetPlayerIdentifiersInfo(nPlayer)
     if not idInfo or not idInfo.license then return end
@@ -251,7 +252,7 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     end
 
     if not hasSteam then
-        deferrals.done("Steam Authentication Failed!\n Make sure Steam is running or restart FiveM. Find more information in console\n")
+        deferrals.done("Steam Authentication Failed!\nMake sure Steam is running or restart FiveM. Find more information in console.\n")
         NagePrint("error", "Steam Auth Failed for player " .. playerName .. ". Check sv_licenseKey in server.cfg. Please reset or register a key on ^5https://steamcommunity.com/dev/apikey^7")
         return
     end
@@ -271,12 +272,26 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         end
     end
 
+    if Config.DupeUser then
+        for _, playerId in ipairs(GetPlayers()) do
+            local pid = tonumber(playerId)
+            if pid ~= source then
+                local otherInfo = GetPlayerIdentifiersInfo(pid)
+                if otherInfo and otherInfo.license == idInfo.license then
+                    deferrals.done("[Nage Core] You are already connected to the server!")
+                    NagePrint("warning", "Duplicate login attempt blocked for %s (%s)", playerName, idInfo.license)
+                    return
+                end
+            end
+        end
+    end
+
     deferrals.update("[Nage Core] Searching your profile in the database...")
 
     AddPlayerToDatabase(nPlayer)
-    Wait(100)
+    Wait(500)
 
-    exports.oxmysql:query('SELECT rank FROM users WHERE license = ?', { idInfo.license }, function(result)
+    exports.oxmysql:query('SELECT `rank` FROM users WHERE license = ?', { idInfo.license }, function(result)
         local rank = result and result[1] and result[1].rank or "user"
 
         CreateThread(function()
@@ -288,6 +303,7 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     end)
 end)
 
+
 AddEventHandler('playerDropped', function(reason)
     local nPlayer = NAGE.PlayerID(source)
     local idInfo = NAGE.PlayerCache[nPlayer]
@@ -296,32 +312,8 @@ AddEventHandler('playerDropped', function(reason)
         NagePrint("info", locale["player_disconnected"], idInfo.steam_name, reason or "Unknown")
     else
         local playerName = NAGE.GetPlayerName(nPlayer) or "Unknown"
-        NagePrint("warn", ("Player %s (src %s) disconnected without cached identifiers. Reason: %s"):format(playerName, nPlayer, reason or "Unknown"))
+        NagePrint("warn", "Player %s (src %s) disconnected without cached identifiers. Reason: %s", playerName, nPlayer, reason)
     end
 
     NAGE.PlayerCache[nPlayer] = nil
-end)
-
-RegisterNetEvent("nage:bringPlayer", function(targetId)
-    local nPlayer = NAGE.PlayerID(source)
-    local coords = GetEntityCoords(GetPlayerPed(nPlayer))
-    TriggerClientEvent("nage:teleportToCoords", targetId, coords)
-end)
-
-RegisterNetEvent("nage:gotoPlayer")
-AddEventHandler("nage:gotoPlayer", function(targetId)
-    local nPlayer = NAGE.PlayerID(source)
-
-    if not targetId or not NAGE.GetPlayerName(targetId) then
-        TriggerClientEvent('nage_notify:notify', nPlayer, {
-            title = locale["invalid_player_id"],
-            type = 'error'
-        })
-        return
-    end
-
-    local targetPed = NAGE.PlayerPedID(targetId)
-    local targetCoords = NAGE.GetCoords(targetPed)
-
-    TriggerClientEvent('nage:teleportPlayer', nPlayer, targetCoords.x, targetCoords.y, targetCoords.z + 1.0)
 end)

@@ -20,7 +20,7 @@ Config.Disable = {
     AimAssist = true,                      -- Disable controller AimAssist
     HealthRegeneration = true,             -- No auto-healing
     Minimap = true,                        -- Disable minimap
-    GhostPeak = false                      -- Prevent shooting through walls (BUGGED, WE ARE WORKING ON IT)
+    GhostPeak = true                       -- Prevent shooting through walls (BUGGED, WE ARE WORKING ON IT)
 }
 
 Config.PauseMenu = {
@@ -35,7 +35,8 @@ Config.PauseMenu = {
 
 Config.Ranks = {
     Admins = { 'owner', 'admin' },
-    Ranks = { 'owner', 'admin', 'mod', 'user' }
+    Ranks = { 'owner', 'admin', 'mod', 'user' },
+    Normal = 'user'
 }
 
 Config.Zones = {
@@ -97,4 +98,3 @@ Config.DiscordActivity = {
     presence = "[{player_id}] Nage Core | {online_players}/5 | In queue: {queue_number}",
     refresh = 100
 }
-

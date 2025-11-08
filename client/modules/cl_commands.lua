@@ -7,6 +7,23 @@ end
 local locales = load(localeLoader)()
 local locale = locales.new(Config.Locale or "en")
 
+local function getTargetId(arg)
+    if not arg then return nil end
+
+    arg = tostring(arg)
+
+    if arg:lower() == "me" then
+        return NAGE.PlayerID()
+    end
+
+    local id = tonumber(arg)
+    if id and NAGE.GetPlayerName(id) then
+        return id
+    end
+
+    return nil
+end
+
 NAGE.RegisterCommand("clear", "Clear the current chat", function()
     TriggerEvent('chat:clear')
 end)
@@ -43,7 +60,9 @@ NAGE.RegisterCommand("tpm", "Teleport to waypoint", function()
         FreezeEntityPosition(NAGE.PlayerPedID(), false)
         DoScreenFadeIn(500)
     end)
-end)
+end, {
+    { name = "ID", help = locale["target_id"] }
+})
 
 NAGE.RegisterCommand("goto", "Teleport to a player", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
@@ -56,16 +75,18 @@ NAGE.RegisterCommand("goto", "Teleport to a player", function(_, args)
             nage.notify({ title = "Nage Core", description = locale["must_provide_id"], type = "error" })
             return
         end
-
-        local targetId = tonumber(args[1])
-        if not targetId or not GetPlayerName(targetId) then
+        
+        local targetId = getTargetId(args[1])
+        if not targetId or not NAGE.GetPlayerName(targetId) then
             nage.notify({ title = locale["invalid_player_id"], type = 'error' })
             return
         end
 
         TriggerServerEvent("nage:gotoPlayer", targetId)
     end)
-end)
+end, {
+    { name = "ID", help = locale["target_id"] }
+})
 
 NAGE.RegisterCommand("bring", "Bring someone to you", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
@@ -79,15 +100,17 @@ NAGE.RegisterCommand("bring", "Bring someone to you", function(_, args)
             return
         end
 
-        local targetId = tonumber(args[1])
-        if not targetId or not GetPlayerName(targetId) then
+        local targetId = getTargetId(args[1])
+        if not targetId or not NAGE.GetPlayerName(targetId) then
             nage.notify({ title = locale["invalid_player_id"], type = 'error' })
             return
         end
 
         TriggerServerEvent("nage:bringPlayer", targetId)
     end)
-end)
+end, {
+    { name = "ID", help = locale["target_id"] }
+})
 
 NAGE.RegisterCommand("revive", "Revive a player", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
@@ -101,15 +124,17 @@ NAGE.RegisterCommand("revive", "Revive a player", function(_, args)
             return
         end
 
-        local targetId = tonumber(args[1])
-        if not targetId or not GetPlayerName(targetId) then
+        local targetId = getTargetId(args[1])
+        if not targetId or not NAGE.GetPlayerName(targetId) then
             nage.notify({ title = locale["invalid_player_id"], type = "error" })
             return
         end
 
         TriggerServerEvent("nage:revivePlayer", targetId)
     end)
-end)
+end, {
+    { name = "ID", help = locale["target_id"] }
+})
 
 NAGE.RegisterCommand("kill", "Kill a player", function(_, args)
     NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
@@ -123,15 +148,17 @@ NAGE.RegisterCommand("kill", "Kill a player", function(_, args)
             return
         end
 
-        local targetId = tonumber(args[1])
-        if not targetId or not GetPlayerName(targetId) then
+        local targetId = getTargetId(args[1])
+        if not targetId or not NAGE.GetPlayerName(targetId) then
             nage.notify({ title = locale["invalid_player_id"], type = "error" })
             return
         end
 
         TriggerServerEvent("nage:killPlayer", targetId)
     end)
-end)
+end, {
+    { name = "ID", help = locale["target_id"] }
+})
 
 NAGE.RegisterCommand("rank", "Check your rank", function()
     TriggerServerEvent("nage:requestRank")
@@ -145,21 +172,160 @@ NAGE.RegisterCommand("setrank", "Set a player's rank", function(_, args)
         end
 
         if #args < 2 then
-            NagePrint("info", locale["usage_setrank"])
+            nage.notify({
+                title = 'Nage Core',
+                description = locale["usage_setrank"],
+                type = 'info'
+            })
             return
         end
         
         local targetPlayer = tonumber(args[1])
         local rank = args[2]
         
-        if not targetPlayer or not GetPlayerName(targetPlayer) then
-            NagePrint("error", locale["invalid_player_id"])
+        if not targetPlayer or not NAGE.GetPlayerName(targetPlayer) then
+            nage.notify({ title = locale["invalid_player_id"], type = "error" })
             return
         end
         
         TriggerServerEvent('nage:updateRank', targetPlayer, rank)
     end)
+end, {
+    { name = "ID", help = locale["target_id"] },
+    { name = "Rank", help = locale["new_rank"]}
+})
+
+NAGE.RegisterCommand("dv", "Delete the nearest or current vehicle", function()
+    NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
+        if not isAdmin then
+            nage.notify({ title = locale["not_admin"], type = 'error' })
+            return
+        end
+
+        local playerPed = PlayerPedId()
+        local veh = GetVehiclePedIsIn(playerPed, false)
+
+        if veh == 0 then
+            local coords = GetEntityCoords(playerPed)
+            local radius = 5.0
+            veh = GetClosestVehicle(coords.x, coords.y, coords.z, radius, 0, 70)
+        end
+
+        if veh ~= 0 and DoesEntityExist(veh) then
+            SetEntityAsMissionEntity(veh, true, true)
+            DeleteVehicle(veh)
+            if not DoesEntityExist(veh) then
+                nage.notify({
+                    title = 'Nage Core',
+                    description = locale["vehicle_deleted"],
+                    type = 'success'
+                })
+            else
+                nage.notify({
+                    title = 'Nage Core',
+                    description = locale["vehicle_delete_error"],
+                    type = 'success'
+                })
+            end
+        else
+            nage.notify({
+                title = 'Nage Core',
+                description = locale["no_vehicles"],
+                type = 'success'
+            })
+        end
+    end)
 end)
+
+NAGE.RegisterCommand("car", "Spawn a vehicle by name or hash", function(_, args)
+    NAGE.TriggerServerCallback("nage:checkAdminAccess", function(isAdmin)
+        if not isAdmin then
+            nage.notify({ title = locale["not_admin"], type = 'error' })
+            return
+        end
+
+        if #args < 1 then
+            nage.notify({
+                title = 'Nage Core',
+                description = locale["usage_car"],
+                type = 'info'
+            })
+            return
+        end
+
+        local modelInput = args[1]
+        local model
+
+        if string.sub(modelInput, 1, 2) == "0x" then
+            model = tonumber(modelInput)
+        elseif tonumber(modelInput) then
+            model = tonumber(modelInput)
+        else
+            model = GetHashKey(modelInput)
+        end
+
+        if not IsModelInCdimage(model) or not IsModelAVehicle(model) then
+            nage.notify({
+                title = 'Nage Core',
+                description = locale["invalid_model"],
+                type = 'error'
+            })
+            return
+        end
+
+        RequestModel(model)
+        local start = GetGameTimer()
+        while not HasModelLoaded(model) do
+            Wait(10)
+            if GetGameTimer() - start > 5000 then
+                nage.notify({
+                    title = 'Nage Core',
+                    description = locale["failed_vehicle"],
+                    type = 'error'
+                })
+                return
+            end
+        end
+
+        local playerPed = PlayerPedId()
+        local coords = GetEntityCoords(playerPed)
+        local heading = GetEntityHeading(playerPed)
+
+        local veh = CreateVehicle(model, coords.x, coords.y, coords.z, heading, true, false)
+        SetPedIntoVehicle(playerPed, veh, -1)
+        SetVehicleHasBeenOwnedByPlayer(veh, true)
+        SetEntityAsMissionEntity(veh, true, true)
+        SetVehicleNumberPlateText(veh, "NAGE")
+        SetVehicleFuelLevel(veh, 100.0)
+        SetModelAsNoLongerNeeded(model)
+
+        SetVehicleModKit(veh, 0)
+        SetVehicleMod(veh, 11, 3, false) -- Engine level 4
+        SetVehicleMod(veh, 12, 3, false) -- Brakes level 4
+        SetVehicleMod(veh, 13, 3, false) -- Transmission level 4
+        SetVehicleMod(veh, 15, 3, false) -- Suspension level 4
+        SetVehicleMod(veh, 16, 4, false) -- Armor level 5
+        ToggleVehicleMod(veh, 18, true)  -- Turbo on
+
+        SetVehicleFixed(veh)
+        SetVehicleDirtLevel(veh, 0.0)
+
+        local displayName = GetDisplayNameFromVehicleModel(model)
+        if displayName and displayName ~= "CARNOTFOUND" then
+            displayName = string.upper(GetLabelText(displayName)) or displayName
+        else
+            displayName = tostring(modelInput)
+        end
+
+        nage.notify({
+            title = 'Nage Core',
+            description = string.format(locale["spawned_vehicle"], displayName),
+            type = 'info'
+        })
+    end)
+end, {
+    { name = "Vehicle", help = locale["model_or_hash"] }
+})
 
 RegisterNetEvent("nage:receiveRank")
 AddEventHandler("nage:receiveRank", function(rank)
@@ -191,7 +357,7 @@ AddEventHandler('nage:revivePlayer', function()
 
         nage.notify({
             title = 'Nage Core',
-            description = locale["revived_by_admin"],
+            description = locale["revived_by_admin"] or locale["you_are_not_dead"],
             type = 'success',
             icon = 'fa-solid fa-heart-pulse'
         })

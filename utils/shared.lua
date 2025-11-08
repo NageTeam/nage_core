@@ -1,8 +1,9 @@
 NAGE = NAGE or {}
 local oxmysql = exports.oxmysql
 NAGE.Commands = {}
+local playerLoaded = false
 
-function NAGE.RegisterCommand(name, description, cb, args)
+function NAGE.RegisterCommand(name, description, cb, args) 
     if not name or not cb then
         return NagePrint("error", "Invalid command registration for %s", name or "nil")
     end
@@ -14,7 +15,17 @@ function NAGE.RegisterCommand(name, description, cb, args)
     }
 
     Citizen.CreateThread(function()
-        TriggerEvent('chat:addSuggestion', '/' .. name, description or "", args or {})
+        local suggestionArgs = {}
+        if args and #args > 0 then
+            for _, arg in ipairs(args) do
+                if type(arg) == "string" then
+                    table.insert(suggestionArgs, { name = arg, help = "" })
+                elseif type(arg) == "table" and arg.name then
+                    table.insert(suggestionArgs, { name = arg.name, help = arg.help or "" })
+                end
+            end
+        end
+        TriggerEvent('chat:addSuggestion', '/' .. name, description or "", suggestionArgs)
     end)
 
     if IsDuplicityVersion() then
@@ -32,9 +43,18 @@ function NAGE.RegisterCommand(name, description, cb, args)
     end
 end
 
+AddEventHandler('playerSpawned', function()
+    playerLoaded = true
+end)
+
+
 if IsDuplicityVersion() then
     NAGE.PlayerID = function(nPlayer)
         return nPlayer or -1
+    end
+
+    NAGE.PlayerPedID = function(nPlayer)
+        return GetPlayerPed(nPlayer)
     end
 
     NAGE.GetPlayerName = function(nPlayer)
@@ -157,6 +177,20 @@ else
     NAGE.GetCoords = function()
         local coords = GetEntityCoords(PlayerPedId())
         return vector3(coords.x, coords.y, coords.z)
+    end
+
+    NAGE.IsPlayerLoaded = function()
+        local playerPed = PlayerPedId()
+    
+        if not NetworkIsPlayerActive(PlayerId()) then
+            return false
+        end
+    
+        if playerPed == 0 or not DoesEntityExist(playerPed) then
+            return false
+        end
+    
+        return true
     end
 end
 

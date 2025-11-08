@@ -8,8 +8,10 @@
     "no_waypoint_found": "No waypoint found",
     "must_provide_id": "You must provide an ID",
     "invalid_player_id": "Invalid player ID",
+    "target_id": "Put target ID here",
     "player_not_found": "Player not found",
     "usage_setrank": "Usage: /setrank [playerId] [newRank]",
+    "new_rank": "New Rank",
     "your_rank_title": "Your Rank",
     "your_rank_desc": "Your Rank: %s",
     "revived_by_admin": "You have been revived by an admin",
@@ -40,5 +42,13 @@
     "no_rank_updated": "No rank updated for %s",
     "player_not_found_db": "Player not found in database: %s",
     "player_revived": "Player Revived!",
-    "player_killed": "Player Killed!"
+    "player_killed": "Player Killed!",
+    "vehicle_deleted": "Vehicle deleted!",
+    "vehicle_delete_error": "Failed to delete vehicle",
+    "no_vehicles": "No nearby vehicle found",
+    "usage_car": "Usage: /car [model or hash]",
+    "model_or_hash": "Vehicle Model or Hash",
+    "invalid_model": "Invalid vehicle model or hash.",
+    "failed_vehicle": "Vehicle model failed to load.",
+    "spawned_vehicle": "Spawned vehicle: %s"
 }

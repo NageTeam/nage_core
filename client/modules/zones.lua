@@ -33,6 +33,7 @@ local function StartShootingBlock()
             local zone = Config.Zones[currentZone]
             if not zone or (zone.options and zone.options.Shooting == false) then
                 DisablePlayerFiring(PlayerId(), true)
+                DisableControlAction(PlayerId(), 140, true)
                 SetCanAttackFriendly(NAGE.PlayerPedID(), false, false)
                 NetworkSetFriendlyFireOption(false)
                 Wait(0)
@@ -42,6 +43,7 @@ local function StartShootingBlock()
         end
 
         DisablePlayerFiring(PlayerId(), false)
+        DisableControlAction(PlayerId(), 140, false)
         SetCanAttackFriendly(NAGE.PlayerPedID(), true, true)
         NetworkSetFriendlyFireOption(true)
         shootingBlockThread = nil

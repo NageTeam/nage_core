@@ -1,5 +1,4 @@
 local Config = {
-    DebugMode = true,
     Colors = {
         core = "^5",
         info = "^4",
@@ -9,12 +8,13 @@ local Config = {
         text = "^7",
         reset = "^9",
         clothing = "^6",
-        debug = "^3"
+        debug = "^3",
+        log = "^9",
     }
 }
 
 _G.NagePrint = function(type, text, ...)
-    if not Config.DebugMode then return end
+    if not Config.Debug then return end
     local t = (type or "info"):lower()
     local typeColor = Config.Colors[t] or Config.Colors.info
     local coreColor = Config.Colors.core

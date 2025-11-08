@@ -26,7 +26,7 @@ Citizen.CreateThread(function()
         local fivem_title = fallback(Config.PauseMenu, "Title", "FiveM")
         local map_category = fallback(Config.PauseMenu, "Map", "MAP")
         local settings_category = fallback(Config.PauseMenu, "Settings", "SETTINGS")
-        local fivem_key_config_submenu = fallback(Config.PauseMenu, "fivem_keybinds", "FiveM")
+        local fivem_key_config_submenu = fallback(Config.PauseMenu, "Keybinds", "FiveM")
 
         AddTextEntry('FE_THDR_GTAO', fivem_title)
         AddTextEntry('PM_SCR_MAP', map_category)

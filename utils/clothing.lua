@@ -7,8 +7,17 @@ AddEventHandler('nage:starterClothing', function()
     local function isResourceRunning(name)
         return GetResourceState(name) == 'started'
     end
+    
+    if isResourceRunning('nage-appearance') then
+        if Config.Debug then
+            NagePrint("clothing", "Detected Nage Appearance")
+        end
+        Wait(100)
+        TriggerServerEvent("nageappearance:requestSkin")
+        return
+    end
 
-    if isResourceRunning('pure-clothing') or isResourceRunning('pure_clothing') then
+    if isResourceRunning('pure-clothing') then
         if Config.Debug then
             NagePrint("clothing", "Detected Pure Clothing")
         end

@@ -46,16 +46,31 @@ AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
             end
             return
         end
-        
-        local insertQuery = ("INSERT INTO users (%s, rank) VALUES (?, ?)"):format(column)
-        exports.oxmysql:execute(insertQuery, {value, "owner"}, function()
+
+        local licenseValue = licenseId and licenseId:gsub("license:", "") or nil
+        if not licenseValue then
+            NagePrint("error", "Missing license for player: %s", name)
+            return
+        end
+
+        local insertQuery
+        local params
+
+        if column == "license" then
+            insertQuery = "INSERT INTO users (license, `rank`) VALUES (?, ?)"
+            params = {licenseValue, "owner"}
+        else
+            insertQuery = ("INSERT INTO users (%s, license, `rank`) VALUES (?, ?, ?)"):format(column)
+            params = {value, licenseValue, "owner"}
+        end
+
+        exports.oxmysql:execute(insertQuery, params, function()
             if Config.Debug then
                 NagePrint("info", "Synced %s (%s) as owner in the database.", name, value)
             end
         end)
     end)
 end)
-
 
 RegisterNetEvent("nage:revivePlayer")
 AddEventHandler("nage:revivePlayer", function(targetId)
@@ -70,7 +85,7 @@ AddEventHandler("nage:revivePlayer", function(targetId)
             return
         end
 
-        if not targetId or not GetPlayerName(targetId) then
+        if not targetId or not NAGE.GetPlayerName(targetId) then
             TriggerClientEvent('nage_notify:notify', nPlayer, {
                 title = locale["invalid_player_id"],
                 type = 'error'
@@ -105,7 +120,7 @@ AddEventHandler("nage:killPlayer", function(targetId)
             return
         end
 
-        if not targetId or not GetPlayerName(targetId) then
+        if not targetId or not NAGE.GetPlayerName(targetId) then
             TriggerClientEvent('nage_notify:notify', nPlayer, {
                 title = locale["invalid_player_id"],
                 type = 'error'
@@ -121,26 +136,26 @@ AddEventHandler("nage:killPlayer", function(targetId)
     end)
 end)
 
-RegisterNetEvent("nage:criticalKill:requestKill")
-AddEventHandler("nage:criticalKill:requestKill", function(victimId)
-    local attackerId = source
+RegisterNetEvent("nage:bringPlayer", function(targetId)
+    local nPlayer = NAGE.PlayerID(source)
+    local coords = GetEntityCoords(GetPlayerPed(nPlayer))
+    TriggerClientEvent("nage:teleportToCoords", targetId, coords)
+end)
 
-    if not NAGE or not NAGE.TriggerCallback then
-        NagePrint("error", "TriggerCallback is not defined.")
+RegisterNetEvent("nage:gotoPlayer")
+AddEventHandler("nage:gotoPlayer", function(targetId)
+    local nPlayer = NAGE.PlayerID(source)
+
+    if not targetId or not NAGE.NAGE.GetPlayerName(targetId) then
+        TriggerClientEvent('nage_notify:notify', nPlayer, {
+            title = locale["invalid_player_id"],
+            type = 'error'
+        })
         return
     end
 
-    NAGE.TriggerCallback("nage:checkAdminAccess", attackerId, function(isAdmin)
-        if not isAdmin then
-            TriggerClientEvent('nage_notify:notify', attackerId, {
-                title = locale["not_admin"],
-                type = 'error'
-            })
-            return
-        end
+    local targetPed = NAGE.PlayerPedID(targetId)
+    local targetCoords = NAGE.GetCoords(targetPed)
 
-        if GetPlayerPing(victimId) > 0 then
-            TriggerClientEvent("nage:criticalKill:forceKill", victimId)
-        end
-    end)
+    TriggerClientEvent('nage:teleportPlayer', nPlayer, targetCoords.x, targetCoords.y, targetCoords.z + 1.0)
 end)
