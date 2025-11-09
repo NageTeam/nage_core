@@ -15,59 +15,68 @@ end)
 AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
     local nPlayer = NAGE.PlayerID(source)
     local identifiers = GetPlayerIdentifiers(nPlayer)
+
     local licenseId, discordId, fivemId
 
     for _, identifier in ipairs(identifiers) do
         if identifier:find("license:") then
-            licenseId = identifier
+            licenseId = identifier:gsub("license:", "")
         elseif identifier:find("discord:") then
-            discordId = identifier
+            discordId = identifier:gsub("discord:", "")
         elseif identifier:find("fivem:") then
-            fivemId = identifier
+            fivemId = identifier:gsub("fivem:", "")
         end
     end
 
     local column, value
-    if discordId then
-        column, value = "discord", discordId
-    elseif fivemId then
-        column, value = "fivem_id", fivemId
-    elseif licenseId then
-        column, value = "license", licenseId
+    if discordId then column, value = "discord", discordId
+    elseif fivemId then column, value = "fivem_id", fivemId
+    elseif licenseId then column, value = "license", licenseId
     else
         return
     end
 
-    local checkQuery = ("SELECT 1 FROM users WHERE %s = ? LIMIT 1"):format(column)
-    exports.oxmysql:execute(checkQuery, {value}, function(result)
-        if result and #result > 0 then
+    local rank = "user"
+    if IsPlayerAceAllowed(nPlayer, "group.admin") then
+        rank = "owner"
+    end
+
+    exports.oxmysql:execute("SELECT 1 FROM users WHERE license = ? LIMIT 1", {licenseId}, function(licenseResult)
+        if licenseResult and #licenseResult > 0 then
             if Config.Debug then
-                NagePrint("info", "User %s (%s) already exists, skipping insert.", name, value)
+                NagePrint("info", "User %s with license %s already exists, skipping insert.", name, licenseId)
             end
             return
         end
 
-        local licenseValue = licenseId and licenseId:gsub("license:", "") or nil
-        if not licenseValue then
-            NagePrint("error", "Missing license for player: %s", name)
-            return
-        end
-
-        local insertQuery
-        local params
-
-        if column == "license" then
-            insertQuery = "INSERT INTO users (license, `rank`) VALUES (?, ?)"
-            params = {licenseValue, "owner"}
-        else
-            insertQuery = ("INSERT INTO users (%s, license, `rank`) VALUES (?, ?, ?)"):format(column)
-            params = {value, licenseValue, "owner"}
-        end
-
-        exports.oxmysql:execute(insertQuery, params, function()
-            if Config.Debug then
-                NagePrint("info", "Synced %s (%s) as owner in the database.", name, value)
+        local checkQuery = ("SELECT 1 FROM users WHERE %s = ? LIMIT 1"):format(column)
+        exports.oxmysql:execute(checkQuery, {value}, function(result)
+            if result and #result > 0 then
+                if Config.Debug then
+                    NagePrint("info", "User %s with %s %s already exists, skipping insert.", name, column, value)
+                end
+                return
             end
+
+            local insertQuery, params
+            if column == "license" then
+                insertQuery = "INSERT INTO users (license, `rank`) VALUES (?, ?)"
+                params = {licenseId, rank}
+            else
+                insertQuery = ("INSERT INTO users (%s, license, `rank`) VALUES (?, ?, ?)"):format(column)
+                params = {value, licenseId, rank}
+            end
+
+            exports.oxmysql:execute(insertQuery, params, function(_, error)
+                if error then
+                    NagePrint("error", "Failed to insert user %s (%s): %s", name, value, error)
+                    return
+                end
+
+                if Config.Debug then
+                    NagePrint("info", "Synced %s (%s) as %s.", name, value, rank)
+                end
+            end)
         end)
     end)
 end)

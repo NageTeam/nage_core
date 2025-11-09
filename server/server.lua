@@ -64,16 +64,16 @@ local function GetPlayerIdentifiersInfo(nPlayer)
     end
 
     local identifiers = {
-        discord    = nil,
+        discord = nil,
         steam_name = NAGE.GetPlayerName(nPlayer) or "Unknown",
-        steam_id   = nil,
-        license    = nil,
-        fivem_id   = tostring(nPlayer)
+        steam_id = nil,
+        license = nil,
+        fivem_id = tostring(nPlayer)
     }
 
     for _, id in ipairs(rawIds) do
         if id:find("discord:") then
-            identifiers.discord = id:gsub("discord:", "")
+            identifiers.discord_id = id:gsub("discord:", "")
         elseif id:find("steam:") then
             identifiers.steam_id = id:gsub("steam:", "")
         elseif id:find("license:") then
@@ -99,6 +99,10 @@ local function updateLastConnected(nPlayer)
     end)
 end
 
+local function betterIdentifier(value)
+    return (value and tostring(value) ~= "" ) and tostring(value) or "N/A"
+end
+
 local function AddPlayerToDatabase(nPlayer)
     local idInfo = GetPlayerIdentifiersInfo(nPlayer)
     if not idInfo or not idInfo.license or idInfo.license == "" then
@@ -112,37 +116,49 @@ local function AddPlayerToDatabase(nPlayer)
         return
     end
 
+    idInfo.discord_id = betterIdentifier(idInfo.discord_id)
+    idInfo.steam_name = betterIdentifier(idInfo.steam_name)
+    idInfo.steam_id = betterIdentifier(idInfo.steam_id)
+    idInfo.license = betterIdentifier(idInfo.license)
+    idInfo.fivem_id = betterIdentifier(idInfo.fivem_id)
+
     exports.oxmysql:query('SELECT * FROM users WHERE license = ?', { idInfo.license }, function(result)
+        local lastConnected = os.date('%Y-%m-%d %H:%M:%S')
+        local defaultRank = tostring((Config.Ranks and Config.Ranks.Normal) or 'user')
+
         if result and result[1] then
             local existing = result[1]
+
             if existing.steam_name ~= idInfo.steam_name then
-                exports.oxmysql:update('UPDATE users SET steam_name = ? WHERE license = ?', {
-                    idInfo.steam_name,
-                    idInfo.license
+                exports.oxmysql:update('UPDATE users SET `steam_name` = ? WHERE `license` = ?', {
+                    idInfo.steam_name, idInfo.license
                 }, function(rowsChanged)
                     if rowsChanged > 0 then
-                        NagePrint("info", locale["updated_steam_name"], idInfo.steam_name, existing.steam_name)
+                        NagePrint("info", locale["updated_steam_name"], idInfo.steam_name, existing.steam_name or "N/A")
                     end
                 end)
             elseif Config.Debug then
                 NagePrint("debug", locale["player_exists"], existing.steam_name, existing.rank, existing.money)
             end
         else
-            exports.oxmysql:insert(
-                'INSERT INTO users (discord, steam_name, steam_id, license, fivem_id, money, rank, last_connected) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                {
-                    idInfo.discord,
-                    idInfo.steam_name,
-                    idInfo.steam_id,
-                    idInfo.license,
-                    idInfo.fivem_id,
-                    tostring(Config.Money or 0),
-                    'user',
-                    nil
-                }, function(insertId)
-                    NagePrint("info", locale["new_player_added"], idInfo.steam_name, insertId or "unknown")
-                end
-            )
+            local insertQuery = [[
+                INSERT INTO users (`discord`, `steam_name`, `steam_id`, `license`, `fivem_id`, `money`, `rank`, `last_connected`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ]]
+            local params = {
+                idInfo.discord_id,
+                idInfo.steam_name,
+                idInfo.steam_id,
+                idInfo.license,
+                idInfo.fivem_id,
+                tostring(Config.Money or 0),
+                defaultRank,
+                lastConnected
+            }
+
+            exports.oxmysql:insert(insertQuery, params, function(insertId)
+                NagePrint("info", locale["new_player_added"], idInfo.steam_name, insertId or "unknown")
+            end)
         end
     end)
 end
@@ -267,7 +283,7 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         NagePrint("debug", locale["player_identifiers"])
         for _, id in pairs(identifiers) do
             if not id:find("^ip:") then
-                NagePrint("debug", "→ %s", id)
+                NagePrint("debug", "- %s", id)
             end
         end
     end

@@ -14,7 +14,6 @@ local Config = {
 }
 
 _G.NagePrint = function(type, text, ...)
-    if not Config.Debug then return end
     local t = (type or "info"):lower()
     local typeColor = Config.Colors[t] or Config.Colors.info
     local coreColor = Config.Colors.core
@@ -30,14 +29,5 @@ _G.NagePrint = function(type, text, ...)
         typeColor, t:upper(), Config.Colors.reset,
         textColor,
         message, Config.Colors.reset
-    ))
-end
-
-_G.NagePrintSection = function(title)
-    local coreColor = Config.Colors.core
-    local textColor = Config.Colors.text
-    print(string.format("%s[Nage Core]%s %s================ %s ================%s",
-        coreColor, Config.Colors.reset,
-        textColor, title, Config.Colors.reset
     ))
 end
