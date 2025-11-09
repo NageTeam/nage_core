@@ -31,7 +31,6 @@ client_scripts {
     'client/modules/zones.lua',
     'client/modules/pausemenu.lua',
     'utils/export.lua',
-    'utils/clothing.lua',
     'utils/shared.lua',
 }
 
