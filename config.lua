@@ -4,6 +4,7 @@ Config.Debug = false                       -- Use this for debugging the core
 Config.Locale = "en"                       -- Set locale/language (Look at the locale folder)
 Config.Money = 2500                        -- The starting money you get when joining for the first time
 Config.PlayTime = false                    -- Enable/Disable playtime tracking (BUGGED, WE ARE WORKING ON IT)
+Config.Dupe = true                         -- Disables joining, if user is already conncted
 Config.Spawn = {                           -- Where you will spawn when you join
     x = -413.1252,
     y = 1168.0978,
@@ -98,3 +99,4 @@ Config.DiscordActivity = {
     presence = "[{player_id}] Nage Core | {online_players}/5 | In queue: {queue_number}",
     refresh = 100
 }
+
