@@ -3,7 +3,7 @@ game 'gta5'
 lua54 'yes'
 license 'Nage License'
 author 'Nage Team - https://discord.gg/ddMtV2CwJj'
-version '1.0.4'
+version '1.0.5'
 description 'A perfect PVP framework for FiveM'
 
 shared_script 'utils/nageprint.lua'
@@ -59,3 +59,4 @@ dependencies {
 exports {
     'getSharedCode'
 }
+
